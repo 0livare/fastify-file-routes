@@ -1,0 +1,41 @@
+{
+  "name": "easy-install",
+  "version": "0.0.12",
+  "description": "Single command to install dependencies with the correct package manager for any JavaScript project.",
+  "author": "Zach Olivare <https://github.com/0livare>",
+  "license": "ISC",
+  "repository": "https://github.com/0livare/easy-install",
+  "bin": {
+    "in": "src/in.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "in": "bun src/in.ts",
+    "link": "bun link",
+    "lint": "tsc && prettier --check ."
+  },
+  "dependencies": {
+    "chalk": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "prettier": "^3.3.2",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "smart",
+    "automatic",
+    "automagic",
+    "install",
+    "installer",
+    "dependencies",
+    "package manager",
+    "npm",
+    "yarn",
+    "pnpm",
+    "bun"
+  ],
+  "packageManager": "bun@1.2.7"
+}
