@@ -140,8 +140,8 @@
       "Non-goal: Do not prompt for confirmation (auto-fix per requirements)",
       "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
     ],
-    "started": false,
-    "complete": false
+    "started": true,
+    "complete": true
   },
   {
     "category": "CLI Interface",
