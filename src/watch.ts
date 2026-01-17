@@ -6,78 +6,15 @@ import {performInitialScan} from './initial-scan'
 import {createFileWatcher, setupGracefulShutdown} from './file-watcher'
 import {synchronizeRouteFile} from './route-synchronizer'
 import {filePathToUrlPath} from './path-mapper'
-import {detectAndResolveConflicts} from './conflict-detector'
 import {extractHttpMethod} from './method-extractor'
 import {generateRouteTemplate} from './route-template'
-import type {RouteFileMetadata} from './file-discovery'
-
-function showHelp() {
-  console.log(chalk.bold.blue('🚀 Fastify File-Based Routing CLI'))
-  console.log()
-  console.log(
-    chalk.gray(
-      'Automatically synchronizes Fastify route URLs with their file paths.',
-    ),
-  )
-  console.log()
-  console.log(chalk.bold('Usage:'))
-  console.log('  fbr              ' + chalk.gray('Watch src/api for changes'))
-  console.log('  fbr --help       ' + chalk.gray('Show this help message'))
-  console.log('  fbr -h           ' + chalk.gray('Show this help message'))
-  console.log('  fbr --quiet      ' + chalk.gray('Suppress all output except initial notification'))
-  console.log('  fbr -q           ' + chalk.gray('Suppress all output except initial notification'))
-  console.log()
-  console.log(chalk.bold('How it works:'))
-  console.log(
-    chalk.gray('  • Scans your src/api directory for Fastify route files'),
-  )
-  console.log(
-    chalk.gray(
-      '  • Automatically updates the "url" field to match the file path',
-    ),
-  )
-  console.log(chalk.gray('  • Watches for file changes and keeps URLs in sync'))
-  console.log()
-  console.log(chalk.bold('Routing conventions:'))
-  console.log(
-    chalk.gray('  • src/api/users.get.ts              → url: "/users" (GET)'),
-  )
-  console.log(
-    chalk.gray(
-      '  • src/api/users/$id.get.ts          → url: "/users/:id" (GET)',
-    ),
-  )
-  console.log(
-    chalk.gray('  • src/api/users/index.post.ts       → url: "/users" (POST)'),
-  )
-  console.log(
-    chalk.gray('  • src/api/_auth/login.post.ts       → url: "/login" (POST)'),
-  )
-  console.log()
-  console.log(chalk.bold('Supported HTTP methods:'))
-  console.log(chalk.gray('  GET, POST, PUT, PATCH, DELETE'))
-  console.log()
-  console.log(chalk.bold('Examples:'))
-  console.log(chalk.cyan('  # Start watching your API directory'))
-  console.log('  $ fbr')
-  console.log()
-  console.log(chalk.cyan('  # The CLI will:'))
-  console.log(chalk.gray('  • Scan all route files and fix any incorrect URLs'))
-  console.log(chalk.gray('  • Watch for new/modified/deleted route files'))
-  console.log(
-    chalk.gray('  • Automatically update URLs when files are moved or renamed'),
-  )
-  console.log()
-  console.log(chalk.bold('More info:'))
-  console.log(chalk.gray('  https://github.com/0livare/fastify-fbr-cli'))
-  console.log()
-}
+import {help} from './commands'
 
 async function main() {
   // Check for help and quiet flags
   const args = process.argv.slice(2)
   if (args.includes('--help') || args.includes('-h')) {
-    showHelp()
+    help()
     process.exit(0)
   }
 
@@ -158,14 +95,18 @@ function handleFileChange(
     const expectedUrl = filePathToUrlPath(relativePath)
 
     if (!expectedUrl) {
-      if (!quiet) console.log(chalk.gray(`  ⏭️  Skipping: not a valid route file`))
+      if (!quiet)
+        console.log(chalk.gray(`  ⏭️  Skipping: not a valid route file`))
       return
     }
 
     // Extract the expected HTTP method from the filename
     const expectedMethod = extractHttpMethod(filePath)
     if (!expectedMethod) {
-      if (!quiet) console.log(chalk.gray(`  ⏭️  Skipping: no valid HTTP method in filename`))
+      if (!quiet)
+        console.log(
+          chalk.gray(`  ⏭️  Skipping: no valid HTTP method in filename`),
+        )
       return
     }
 
@@ -177,7 +118,11 @@ function handleFileChange(
         const template = generateRouteTemplate(expectedUrl, expectedMethod)
         fs.writeFileSync(filePath, template, 'utf-8')
         if (!quiet) {
-          console.log(chalk.green(`  ✨ Scaffolded new route: ${expectedUrl} (${expectedMethod})`))
+          console.log(
+            chalk.green(
+              `  ✨ Scaffolded new route: ${expectedUrl} (${expectedMethod})`,
+            ),
+          )
         }
         return
       }
@@ -195,18 +140,26 @@ function handleFileChange(
           changes.push(`url: ${result.oldUrl || '(none)'} → ${result.newUrl}`)
         }
         if (result.oldMethod !== result.newMethod) {
-          changes.push(`method: ${result.oldMethod || '(none)'} → ${result.newMethod}`)
+          changes.push(
+            `method: ${result.oldMethod || '(none)'} → ${result.newMethod}`,
+          )
         }
         console.log(chalk.green(`  ✓ Updated: ${changes.join(', ')}`))
       }
     } else {
-      if (!quiet) console.log(chalk.gray(`  ✓ Already correct: ${result.newUrl} (${result.newMethod})`))
+      if (!quiet)
+        console.log(
+          chalk.gray(
+            `  ✓ Already correct: ${result.newUrl} (${result.newMethod})`,
+          ),
+        )
     }
   } catch (error) {
-    if (!quiet) console.error(
-      chalk.red(`  ✗ Error processing file:`),
-      error instanceof Error ? error.message : error,
-    )
+    if (!quiet)
+      console.error(
+        chalk.red(`  ✗ Error processing file:`),
+        error instanceof Error ? error.message : error,
+      )
   }
 }
 
