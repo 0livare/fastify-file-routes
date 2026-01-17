@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {modifyRouteUrl} from '../ast-modifier'
+import {modifyRouteUrl, modifyRouteFields} from '../ast-modifier'
 
 describe('modifyRouteUrl', () => {
   describe('basic modification', () => {
@@ -436,6 +436,345 @@ export default async function (fastify: FastifyInstance) {
       expect(result.modified).toBe(true)
       expect(result.content).toContain("url: '/api/v2/posts',")
       expect(result.content).toContain('withTypeProvider<TypeBoxProvider>()')
+    })
+  })
+})
+
+describe('modifyRouteFields', () => {
+  describe('modifying method only', () => {
+    it('should modify method field with single quotes', () => {
+      const code = `
+fastify.route({
+  url: '/users',
+  method: 'GET',
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {method: 'POST'})
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toBe(
+        `
+fastify.route({
+  url: '/users',
+  method: 'POST',
+})
+      `.trim(),
+      )
+    })
+
+    it('should modify method field with double quotes', () => {
+      const code = `
+fastify.route({
+  url: "/users",
+  method: "GET",
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {method: 'DELETE'})
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toBe(
+        `
+fastify.route({
+  url: "/users",
+  method: "DELETE",
+})
+      `.trim(),
+      )
+    })
+  })
+
+  describe('modifying url only', () => {
+    it('should modify url field with single quotes', () => {
+      const code = `
+fastify.route({
+  url: '/old/path',
+  method: 'GET',
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {url: '/new/path'})
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toBe(
+        `
+fastify.route({
+  url: '/new/path',
+  method: 'GET',
+})
+      `.trim(),
+      )
+    })
+  })
+
+  describe('modifying both url and method', () => {
+    it('should modify both url and method with single quotes', () => {
+      const code = `
+fastify.route({
+  url: '/users',
+  method: 'GET',
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {url: '/posts', method: 'POST'})
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toBe(
+        `
+fastify.route({
+  url: '/posts',
+  method: 'POST',
+})
+      `.trim(),
+      )
+    })
+
+    it('should modify both url and method preserving quote styles', () => {
+      const code = `
+fastify.route({
+  url: "/users",
+  method: 'GET',
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {
+        url: '/products/:id',
+        method: 'PATCH',
+      })
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain('url: "/products/:id",')
+      expect(result.content).toContain("method: 'PATCH',")
+    })
+
+    it('should handle method change from GET to POST', () => {
+      const code = `
+fastify.route({
+  url: '/users/:id',
+  method: 'GET',
+  handler: async (req, reply) => {
+    return {id: req.params.id}
+  }
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {method: 'POST'})
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain("method: 'POST',")
+      expect(result.content).toContain("url: '/users/:id',")
+      expect(result.content).toContain('handler: async (req, reply) => {')
+    })
+
+    it('should handle method change from POST to DELETE', () => {
+      const code = `
+fastify.route({
+  url: '/users/:id',
+  method: 'POST',
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {method: 'DELETE'})
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain("method: 'DELETE',")
+    })
+  })
+
+  describe('formatting preservation', () => {
+    it('should preserve indentation when modifying both fields', () => {
+      const code = `
+  fastify.route({
+    url: '/old',
+    method: 'GET',
+  })
+      `.trim()
+
+      const result = modifyRouteFields(code, {url: '/new', method: 'PUT'})
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toBe(
+        `
+  fastify.route({
+    url: '/new',
+    method: 'PUT',
+  })
+      `.trim(),
+      )
+    })
+
+    it('should preserve comments when modifying method', () => {
+      const code = `
+// User routes
+fastify.route({
+  url: '/users', // Users endpoint
+  method: 'GET', // HTTP GET
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {method: 'POST'})
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain('// User routes')
+      expect(result.content).toContain('// Users endpoint')
+      expect(result.content).toContain('// HTTP GET')
+      expect(result.content).toContain("method: 'POST',")
+    })
+
+    it('should preserve property order when modifying method', () => {
+      const code = `
+fastify.route({
+  method: 'GET',
+  url: '/users',
+  handler: async () => {},
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {method: 'DELETE'})
+
+      expect(result.modified).toBe(true)
+      const lines = result.content!.split('\n')
+      expect(lines[1].trim()).toBe("method: 'DELETE',")
+      expect(lines[2].trim()).toBe("url: '/users',")
+      expect(lines[3].trim()).toBe('handler: async () => {},')
+    })
+  })
+
+  describe('real-world file rename scenarios', () => {
+    it('should handle renaming from users.get.ts to users.post.ts', () => {
+      const code = `
+import {FastifyInstance} from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/users',
+    method: 'GET',
+    handler: async (request, reply) => {
+      return {users: []}
+    },
+  })
+}
+      `.trim()
+
+      const result = modifyRouteFields(code, {method: 'POST'})
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain("method: 'POST',")
+      expect(result.content).toContain("url: '/users',")
+      expect(result.content).toContain('import {FastifyInstance}')
+      expect(result.content).toContain('handler: async (request, reply) => {')
+    })
+
+    it('should handle renaming from users.$id.get.ts to users.$id.patch.ts', () => {
+      const code = `
+import {FastifyInstance} from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/users/:id',
+    method: 'GET',
+    handler: async (request, reply) => {
+      const {id} = request.params
+      return {id}
+    },
+  })
+}
+      `.trim()
+
+      const result = modifyRouteFields(code, {method: 'PATCH'})
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain("method: 'PATCH',")
+      expect(result.content).toContain("url: '/users/:id',")
+    })
+
+    it('should handle complete file move and method change', () => {
+      const code = `
+fastify.route({
+  url: '/api/v1/users',
+  method: 'GET',
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {
+        url: '/api/v2/products',
+        method: 'DELETE',
+      })
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain("url: '/api/v2/products',")
+      expect(result.content).toContain("method: 'DELETE',")
+    })
+  })
+
+  describe('safety checks', () => {
+    it('should return error when no route found', () => {
+      const code = `
+const x = 5
+console.log(x)
+      `.trim()
+
+      const result = modifyRouteFields(code, {method: 'POST'})
+
+      expect(result.modified).toBe(false)
+      expect(result.content).toBe(null)
+      expect(result.error).toBe(
+        'No valid fields found in route configuration to modify',
+      )
+    })
+
+    it('should return error when neither field is specified', () => {
+      const code = `
+fastify.route({
+  url: '/users',
+  method: 'GET',
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {})
+
+      expect(result.modified).toBe(false)
+      expect(result.content).toBe(null)
+      expect(result.error).toBe(
+        'No valid fields found in route configuration to modify',
+      )
+    })
+
+    it('should return error when route has no matching fields', () => {
+      const code = `
+fastify.route({
+  handler: async () => {},
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {url: '/test', method: 'GET'})
+
+      expect(result.modified).toBe(false)
+      expect(result.content).toBe(null)
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should handle empty file', () => {
+      const result = modifyRouteFields('', {method: 'POST'})
+
+      expect(result.modified).toBe(false)
+      expect(result.content).toBe(null)
+    })
+
+    it('should handle only modifying method when url not in config', () => {
+      const code = `
+fastify.route({
+  method: 'GET',
+  handler: async () => {},
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {method: 'POST'})
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain("method: 'POST',")
     })
   })
 })

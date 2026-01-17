@@ -63,7 +63,7 @@ export function performInitialScan(
 
   // Step 2: Detect and resolve conflicts
   console.log('🔍 Detecting conflicts...')
-  const {fileUrlMap, conflicts} = detectAndResolveConflicts(routes)
+  const {fileUrlMap, fileRouteMap, conflicts} = detectAndResolveConflicts(routes)
 
   if (conflicts.length === 0) {
     console.log('   No conflicts detected')
@@ -73,7 +73,7 @@ export function performInitialScan(
 
   // Step 3: Synchronize all files
   console.log('🔄 Synchronizing route files...')
-  const syncSummary = synchronizeRoutes(fileUrlMap)
+  const syncSummary = synchronizeRoutes(fileUrlMap, fileRouteMap)
 
   // Step 4: Print summary
   console.log('\n📊 Summary:')

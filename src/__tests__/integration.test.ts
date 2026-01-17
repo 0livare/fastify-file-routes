@@ -874,4 +874,322 @@ export default async function (fastify) {
       expect(finalContent).toBe(correctContent)
     })
   })
+
+  describe('Method Synchronization (File Rename Scenarios)', () => {
+    it('should synchronize method when file is renamed from .get.ts to .post.ts', () => {
+      // Create a file with GET method
+      const content = `
+import type { FastifyInstance } from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/users',
+    method: 'GET',
+    handler: async (request, reply) => {
+      return { users: [] }
+    }
+  })
+}
+`
+
+      // Simulate the file now being a .post.ts file
+      fs.mkdirSync(path.join(testDir, 'users'), {recursive: true})
+      const filePath = path.join(testDir, 'users/index.post.ts')
+      fs.writeFileSync(filePath, content)
+
+      const result = performInitialScan(testDir)
+
+      expect(result.totalFiles).toBe(1)
+      expect(result.filesUpdated).toBe(1)
+
+      // Verify both method and URL are correct
+      const updatedContent = fs.readFileSync(filePath, 'utf-8')
+      expect(updatedContent).toContain("method: 'POST'")
+      expect(updatedContent).toContain("url: '/users'")
+
+      // Verify the rest of the file is preserved
+      expect(updatedContent).toContain('import type { FastifyInstance }')
+      expect(updatedContent).toContain('return { users: [] }')
+    })
+
+    it('should synchronize method when file is renamed from .get.ts to .delete.ts', () => {
+      const content = `
+export default async function (fastify) {
+  fastify.route({
+    url: '/users/:id',
+    method: 'GET',
+    handler: async (request) => {
+      return { user: { id: request.params.id } }
+    }
+  })
+}
+`
+
+      fs.mkdirSync(path.join(testDir, 'users'), {recursive: true})
+      const filePath = path.join(testDir, 'users/$id.delete.ts')
+      fs.writeFileSync(filePath, content)
+
+      const result = performInitialScan(testDir)
+
+      expect(result.totalFiles).toBe(1)
+      expect(result.filesUpdated).toBe(1)
+
+      const updatedContent = fs.readFileSync(filePath, 'utf-8')
+      expect(updatedContent).toContain("method: 'DELETE'")
+      expect(updatedContent).toContain("url: '/users/:id'")
+    })
+
+    it('should synchronize method when file is renamed from .post.ts to .patch.ts', () => {
+      const content = `
+import type { FastifyInstance } from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/products/:productId',
+    method: 'POST',
+    schema: {
+      body: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          price: { type: 'number' }
+        }
+      }
+    },
+    handler: async (request, reply) => {
+      return { product: request.body }
+    }
+  })
+}
+`
+
+      fs.mkdirSync(path.join(testDir, 'products'), {recursive: true})
+      const filePath = path.join(testDir, 'products/$productId.patch.ts')
+      fs.writeFileSync(filePath, content)
+
+      const result = performInitialScan(testDir)
+
+      expect(result.totalFiles).toBe(1)
+      expect(result.filesUpdated).toBe(1)
+
+      const updatedContent = fs.readFileSync(filePath, 'utf-8')
+      expect(updatedContent).toContain("method: 'PATCH'")
+      expect(updatedContent).toContain("url: '/products/:productId'")
+      // Verify schema is preserved
+      expect(updatedContent).toContain('schema:')
+      expect(updatedContent).toContain('properties:')
+    })
+
+    it('should synchronize method when file is renamed from .put.ts to .get.ts', () => {
+      const content = `
+export default async function (fastify) {
+  fastify.route({
+    url: '/settings',
+    method: 'PUT',
+    handler: async (request) => {
+      return { updated: true }
+    }
+  })
+}
+`
+
+      fs.mkdirSync(path.join(testDir, 'settings'), {recursive: true})
+      const filePath = path.join(testDir, 'settings/index.get.ts')
+      fs.writeFileSync(filePath, content)
+
+      const result = performInitialScan(testDir)
+
+      expect(result.totalFiles).toBe(1)
+      expect(result.filesUpdated).toBe(1)
+
+      const updatedContent = fs.readFileSync(filePath, 'utf-8')
+      expect(updatedContent).toContain("method: 'GET'")
+    })
+
+    it('should preserve quote style when synchronizing method', () => {
+      const singleQuoteContent = `
+fastify.route({
+  url: '/test',
+  method: 'GET',
+})
+`
+
+      const doubleQuoteContent = `
+fastify.route({
+  url: "/test",
+  method: "GET",
+})
+`
+
+      fs.writeFileSync(path.join(testDir, 'single.post.ts'), singleQuoteContent)
+      fs.writeFileSync(path.join(testDir, 'double.post.ts'), doubleQuoteContent)
+
+      performInitialScan(testDir)
+
+      const singleUpdated = fs.readFileSync(
+        path.join(testDir, 'single.post.ts'),
+        'utf-8',
+      )
+      const doubleUpdated = fs.readFileSync(
+        path.join(testDir, 'double.post.ts'),
+        'utf-8',
+      )
+
+      // Single quotes should remain single
+      expect(singleUpdated).toContain("method: 'POST'")
+      expect(singleUpdated).not.toContain('method: "POST"')
+
+      // Double quotes should remain double
+      expect(doubleUpdated).toContain('method: "POST"')
+      expect(doubleUpdated).not.toContain("method: 'POST'")
+    })
+
+    it('should handle method synchronization with file watcher', async () => {
+      // Create a file with wrong method
+      const initialContent = `
+export default async function (fastify) {
+  fastify.route({
+    url: '/test',
+    method: 'GET',
+    handler: async () => ({ data: 'test' })
+  })
+}
+`
+      const filePath = path.join(testDir, 'test.post.ts')
+      fs.writeFileSync(filePath, initialContent)
+
+      const events: WatchEvent[] = []
+      const onEvent = vi.fn((event: WatchEvent) => {
+        events.push(event)
+
+        if (event.type === 'add') {
+          // Extract method from filename
+          const extractHttpMethod = require('../method-extractor')
+            .extractHttpMethod
+          const expectedMethod = extractHttpMethod(event.filePath)
+          if (expectedMethod) {
+            synchronizeRouteFile(event.filePath, '/test', expectedMethod)
+          }
+        }
+      })
+
+      const onReady = vi.fn()
+      const watcher = createFileWatcher(testDir, {onEvent, onReady})
+
+      await delay(200)
+      expect(onReady).toHaveBeenCalled()
+
+      // Add a new file with wrong method
+      const newFilePath = path.join(testDir, 'new.post.ts')
+      fs.writeFileSync(newFilePath, initialContent)
+
+      await delay(400)
+
+      // Verify the method was synchronized
+      const finalContent = fs.readFileSync(newFilePath, 'utf-8')
+      expect(finalContent).toContain("method: 'POST'")
+      expect(finalContent).toContain('data')
+
+      await watcher.close()
+    })
+
+    it('should handle multiple files with different method changes', () => {
+      const files = [
+        {
+          name: 'users/index.get.ts',
+          content: `fastify.route({ url: '/users', method: 'POST' })`,
+          expectedMethod: 'GET',
+        },
+        {
+          name: 'users/index.post.ts',
+          content: `fastify.route({ url: '/users', method: 'DELETE' })`,
+          expectedMethod: 'POST',
+        },
+        {
+          name: 'products/$id.patch.ts',
+          content: `fastify.route({ url: '/products/:id', method: 'GET' })`,
+          expectedMethod: 'PATCH',
+        },
+        {
+          name: 'settings/index.delete.ts',
+          content: `fastify.route({ url: '/settings', method: 'PUT' })`,
+          expectedMethod: 'DELETE',
+        },
+      ]
+
+      // Create all files
+      files.forEach((file) => {
+        const dir = path.dirname(path.join(testDir, file.name))
+        fs.mkdirSync(dir, {recursive: true})
+        fs.writeFileSync(path.join(testDir, file.name), file.content)
+      })
+
+      const result = performInitialScan(testDir)
+
+      expect(result.totalFiles).toBe(4)
+      expect(result.filesUpdated).toBe(4)
+
+      // Verify each file has the correct method
+      files.forEach((file) => {
+        const content = fs.readFileSync(path.join(testDir, file.name), 'utf-8')
+        expect(content).toContain(`method: '${file.expectedMethod}'`)
+      })
+    })
+
+    it('should not modify method if it already matches the filename', () => {
+      const content = `
+export default async function (fastify) {
+  fastify.route({
+    url: '/users',
+    method: 'GET',
+    handler: async () => ({ users: [] })
+  })
+}
+`
+
+      const filePath = path.join(testDir, 'users.get.ts')
+      fs.writeFileSync(filePath, content)
+
+      const result = performInitialScan(testDir)
+
+      expect(result.totalFiles).toBe(1)
+      expect(result.filesUpdated).toBe(0)
+      expect(result.filesSkipped).toBe(1)
+
+      // File should not be modified
+      const finalContent = fs.readFileSync(filePath, 'utf-8')
+      expect(finalContent).toBe(content)
+    })
+
+    it('should synchronize both URL and method when both are incorrect', () => {
+      const content = `
+import type { FastifyInstance } from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/wrong-url',
+    method: 'GET',
+    handler: async (request, reply) => {
+      return { data: 'test' }
+    }
+  })
+}
+`
+
+      fs.mkdirSync(path.join(testDir, 'api/v2/users'), {recursive: true})
+      const filePath = path.join(testDir, 'api/v2/users/$id.patch.ts')
+      fs.writeFileSync(filePath, content)
+
+      const result = performInitialScan(testDir)
+
+      expect(result.totalFiles).toBe(1)
+      expect(result.filesUpdated).toBe(1)
+
+      const updatedContent = fs.readFileSync(filePath, 'utf-8')
+      expect(updatedContent).toContain("url: '/api/v2/users/:id'")
+      expect(updatedContent).toContain("method: 'PATCH'")
+      // Verify handler preserved
+      expect(updatedContent).toContain("return { data: 'test' }")
+    })
+  })
 })

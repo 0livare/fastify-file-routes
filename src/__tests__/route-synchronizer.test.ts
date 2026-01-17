@@ -147,7 +147,7 @@ describe('synchronizeRouteFile', () => {
 
       expect(result.modified).toBe(false)
       expect(result.oldUrl).toBeNull()
-      expect(result.error).toContain('No valid url field found')
+      expect(result.error).toContain('No valid fields found')
     })
   })
 
@@ -193,7 +193,7 @@ describe('synchronizeRouteFile', () => {
       const result = synchronizeRouteFile(filePath, '/users')
 
       expect(result.modified).toBe(false)
-      expect(result.error).toContain('No valid url field found')
+      expect(result.error).toContain('No valid fields found')
     })
 
     it('should handle file with malformed syntax', () => {

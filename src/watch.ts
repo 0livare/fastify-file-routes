@@ -6,6 +6,7 @@ import {createFileWatcher, setupGracefulShutdown} from './file-watcher'
 import {synchronizeRouteFile} from './route-synchronizer'
 import {filePathToUrlPath} from './path-mapper'
 import {detectAndResolveConflicts} from './conflict-detector'
+import {extractHttpMethod} from './method-extractor'
 import type {RouteFileMetadata} from './file-discovery'
 
 function showHelp() {
@@ -154,25 +155,31 @@ function handleFileChange(filePath: string, apiDir: string, quiet: boolean = fal
       return
     }
 
-    // Create a temporary route metadata object for conflict detection
-    // In a real scenario with multiple files, we'd need to check all files
-    // For now, we'll use the calculated URL directly
-    const urlMap = new Map<string, string>()
-    urlMap.set(filePath, expectedUrl)
+    // Extract the expected HTTP method from the filename
+    const expectedMethod = extractHttpMethod(filePath)
+    if (!expectedMethod) {
+      if (!quiet) console.log(chalk.gray(`  ⏭️  Skipping: no valid HTTP method in filename`))
+      return
+    }
 
-    // Synchronize the file
-    const result = synchronizeRouteFile(filePath, expectedUrl)
+    // Synchronize the file (both URL and method)
+    const result = synchronizeRouteFile(filePath, expectedUrl, expectedMethod)
 
     if (result.error) {
       if (!quiet) console.log(chalk.red(`  ✗ Error: ${result.error}`))
     } else if (result.modified) {
-      if (!quiet) console.log(
-        chalk.green(
-          `  ✓ Updated: ${result.oldUrl || '(none)'} → ${result.newUrl}`,
-        ),
-      )
+      if (!quiet) {
+        const changes: string[] = []
+        if (result.oldUrl !== result.newUrl) {
+          changes.push(`url: ${result.oldUrl || '(none)'} → ${result.newUrl}`)
+        }
+        if (result.oldMethod !== result.newMethod) {
+          changes.push(`method: ${result.oldMethod || '(none)'} → ${result.newMethod}`)
+        }
+        console.log(chalk.green(`  ✓ Updated: ${changes.join(', ')}`))
+      }
     } else {
-      if (!quiet) console.log(chalk.gray(`  ✓ Already correct: ${result.newUrl}`))
+      if (!quiet) console.log(chalk.gray(`  ✓ Already correct: ${result.newUrl} (${result.newMethod})`))
     }
   } catch (error) {
     if (!quiet) console.error(
