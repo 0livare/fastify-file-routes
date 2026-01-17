@@ -177,7 +177,7 @@
     "category": "cli",
     "description": "Update the cli arguments to suit this new package",
     "steps": [
-      "Change the command name from tsr to fastify-fbr-cli",
+      "Change the command name from tsr to fastify-file-routes",
       "Update the help text to reflect the new functionality and usage",
       "Remove any references to Tanstack Router from the CLI output and documentation",
       "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass",

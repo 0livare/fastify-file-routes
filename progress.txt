@@ -505,7 +505,7 @@ Press Ctrl+C to stop watching
 **Date:** 2026-01-16
 
 **Summary:**
-- Updated package.json with new package name: fastify-fbr-cli
+- Updated package.json with new package name: fastify-file-routes
 - Updated package description to reflect Fastify file-based routing functionality
 - Removed old "in" command from bin, kept only "fastify-fbr" command
 - Updated npm scripts: replaced "in" script with "watch" script
@@ -515,9 +515,9 @@ Press Ctrl+C to stop watching
 - All checks pass: typecheck (0 errors), test (230/230), and lint (prettier + tsc)
 
 **Key Changes:**
-- Package name: easy-install → fastify-fbr-cli
+- Package name: easy-install → fastify-file-routes
 - Package version reset to 0.0.1
-- Repository URL updated to point to fastify-fbr-cli
+- Repository URL updated to point to fastify-file-routes
 - Binary command: "in" removed, "fastify-fbr" is the only CLI command
 - Keywords updated to reflect routing/Fastify focus instead of package manager focus
 - README completely rewritten with:
@@ -543,7 +543,7 @@ Press Ctrl+C to stop watching
 
 **Notes:**
 - All references to "easy-install", "tsr", and "Tanstack Router" have been removed from the package
-- The package is now properly branded as "fastify-fbr-cli"
+- The package is now properly branded as "fastify-file-routes"
 - Documentation is production-ready for npm publication
 - All tests continue to pass with no regressions
 
@@ -607,7 +607,7 @@ Examples:
   • Automatically update URLs when files are moved or renamed
 
 More info:
-  https://github.com/0livare/fastify-fbr-cli
+  https://github.com/0livare/fastify-file-routes
 ```
 
 **Testing:**

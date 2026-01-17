@@ -64,6 +64,6 @@ export function help() {
   )
   console.log()
   console.log(chalk.bold('More info:'))
-  console.log(chalk.gray('  https://github.com/0livare/fastify-fbr-cli'))
+  console.log(chalk.gray('  https://github.com/0livare/fastify-file-routes'))
   console.log()
 }

@@ -5,19 +5,19 @@ Automatic URL synchronization for Fastify file-based routing. This CLI tool watc
 ## Installation
 
 ```bash
-# fastify-fbr-cli depends on bun being installed globally
+# fastify-file-routes depends on bun being installed globally
 npm i -g bun
 
-# Creates a global `fastify-fbr` cli command
-npm i -g fastify-fbr-cli
+# Creates a global `ffr` cli command
+npm i -g fastify-file-routes
 ```
 
 ## Usage
 
-Run the `fastify-fbr` command from your project root to watch your API routes:
+Run the `ffr` command from your project root to watch your API routes:
 
 ```bash
-fastify-fbr
+ffr
 ```
 
 The CLI will:
@@ -33,10 +33,10 @@ The CLI will:
 
 ```bash
 # Run in quiet mode (minimal output)
-fastify-fbr --quiet
+ffr --quiet
 
 # Or use the short flag
-fastify-fbr -q
+ffr -q
 ```
 
 ## How it works
@@ -105,7 +105,7 @@ To run the CLI in development:
 bun src/watch.ts
 ```
 
-To link the global `fastify-fbr` command to this local development version:
+To link the global `ffr` command to this local development version:
 
 ```bash
 bun link
