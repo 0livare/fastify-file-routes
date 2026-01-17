@@ -190,3 +190,44 @@
 - Edge cases (non-route files, dots in directory names, multiple dots in filenames)
 
 ---
+
+## Conflict Detection (Complete)
+
+**Date:** 2026-01-16
+
+**Summary:**
+- Created src/conflict-detector.ts with detectAndResolveConflicts function
+- Implemented detection of route conflicts when multiple files map to the same URL
+- Resolves conflicts by appending numeric suffixes (-2, -3, etc.) to duplicate URLs
+- First file keeps original URL, subsequent files get suffixes
+- Logs warnings to console for each conflict detected with file paths and resolutions
+- Returns ConflictResolutionResult with fileUrlMap (Map<string, string>) and conflicts array
+- Created comprehensive test suite with 52 tests covering all scenarios
+- All tests pass (159/159 total across all test files)
+- All checks pass: typecheck, test, and lint
+
+**Key Decisions:**
+- Used Map data structure for efficient file-to-URL lookups
+- Groups files by URL first, then processes each group to detect conflicts
+- Numeric suffixes start at -2 (not -1) for clarity (original URL has no suffix)
+- Console warnings include emoji (⚠️) and clear formatting showing which file keeps original URL
+- ConflictInfo interface captures both the conflicting URL and all affected file paths
+- Function is pure and deterministic - same input always produces same output
+- Handles any number of conflicts (2-way, 3-way, n-way)
+- Supports multiple independent conflict groups in same route set
+
+**Files Created:**
+- src/conflict-detector.ts (91 lines)
+- src/__tests__/conflict-detector.test.ts (521 lines, 52 tests)
+
+**Testing Coverage:**
+- No conflicts scenarios (empty, single route, multiple different URLs)
+- Two-way conflicts (basic conflict, root path conflict)
+- Multi-way conflicts (3-way, 4-way with correct numeric suffixes)
+- Multiple independent conflicts (separate conflict groups, mix with non-conflicts)
+- Complex URL patterns (nested paths, multiple parameters, special characters)
+- Console logging verification (warnings logged correctly, not logged when no conflicts)
+- Return value structure validation (Map and array types, all files included)
+- Edge cases (URLs with hyphens, order preservation, long URLs, special characters in paths)
+
+---
