@@ -71,12 +71,12 @@ The CLI will:
 ### Options
 
 - `--help`, `-h`: Show help message
-- `--quiet`, `-q`: Suppress all output except initial notification that the tool is watching
 - `--version`, `-v`: Show version number
+- `--verbose`: Show detailed output during operation (by default, the CLI runs quietly)
 
 ```bash
-# Run in quiet mode (minimal output)
-ffr --quiet
+# Run with verbose output
+ffr --verbose
 ```
 
 ## How it works

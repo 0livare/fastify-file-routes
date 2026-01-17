@@ -9,7 +9,7 @@ export function parseCliArgs() {
       options: {
         help: {type: 'boolean', short: 'h'},
         version: {type: 'boolean', short: 'v'},
-        quiet: {type: 'boolean', short: 'q'},
+        verbose: {type: 'boolean'},
       },
       strict: true,
       allowPositionals: false,

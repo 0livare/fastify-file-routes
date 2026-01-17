@@ -16,12 +16,7 @@ export function help() {
   console.log('  fbr --version    ' + chalk.gray('Show version number'))
   console.log('  fbr -v           ' + chalk.gray('Show version number'))
   console.log(
-    '  fbr --quiet      ' +
-      chalk.gray('Suppress all output except initial notification'),
-  )
-  console.log(
-    '  fbr -q           ' +
-      chalk.gray('Suppress all output except initial notification'),
+    '  fbr --verbose    ' + chalk.gray('Show detailed output during operation'),
   )
   console.log()
   console.log(chalk.bold('How it works:'))
@@ -55,8 +50,11 @@ export function help() {
   console.log(chalk.gray('  GET, POST, PUT, PATCH, DELETE'))
   console.log()
   console.log(chalk.bold('Examples:'))
-  console.log(chalk.cyan('  # Start watching your API directory'))
+  console.log(chalk.cyan('  # Start watching your API directory (quiet mode)'))
   console.log('  $ fbr')
+  console.log()
+  console.log(chalk.cyan('  # Start watching with detailed output'))
+  console.log('  $ fbr --verbose')
   console.log()
   console.log(chalk.cyan('  # The CLI will:'))
   console.log(chalk.gray('  • Scan all route files and fix any incorrect URLs'))
