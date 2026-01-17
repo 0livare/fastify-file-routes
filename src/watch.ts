@@ -9,23 +9,20 @@ import {filePathToUrlPath} from './path-mapper'
 import {extractHttpMethod} from './method-extractor'
 import {generateRouteTemplate} from './route-template'
 import {help} from './commands'
+import {parseCliArgs} from './cli'
 
 async function main() {
-  // Check for help and quiet flags
-  const args = process.argv.slice(2)
-  if (args.includes('--help') || args.includes('-h')) {
+  const args = parseCliArgs()
+
+  if (args.help) {
     help()
     process.exit(0)
   }
 
-  const quiet = args.includes('--quiet') || args.includes('-q')
+  const quiet = args.quiet || false
   const apiDir = path.join(process.cwd(), 'src/api')
 
-  if (quiet) {
-    console.log(chalk.bold.blue('🚀 Fastify File-Based Routing CLI'))
-    console.log(chalk.gray(`Watching: ${apiDir}`))
-    console.log(chalk.gray('Press Ctrl+C to stop watching\n'))
-  } else {
+  if (!quiet) {
     console.log(chalk.bold.blue('🚀 Fastify File-Based Routing CLI'))
     console.log(chalk.gray(`Watching: ${apiDir}\n`))
 
