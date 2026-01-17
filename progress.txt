@@ -111,3 +111,42 @@
 - src/__tests__/ast-parser.test.ts (425 lines, 49 tests)
 
 ---
+
+## AST Modification (Complete)
+
+**Date:** 2026-01-16
+
+**Summary:**
+- Created src/ast-modifier.ts with modifyRouteUrl function
+- Implemented AST modification to update 'url' field while preserving formatting
+- Preserves original quote style (single, double, backtick), indentation, tabs, comments, and structure
+- Uses precise character position replacement instead of full AST regeneration to maintain formatting
+- Safety check: only modifies files with valid Fastify route() structure
+- Returns ModificationResult with modified flag, content, and optional error
+- Created comprehensive test suite with 62 tests covering all scenarios
+- All tests pass (111/111 total across all test files)
+- All checks pass: typecheck, test, and lint
+
+**Key Decisions:**
+- Used string manipulation with character positions instead of AST regeneration for better format preservation
+- Extract node information including start/end positions and quote character from original source
+- Replace only the exact string literal value, keeping all surrounding code intact
+- Returns structured result object with modified flag and optional error for safety
+- Safety check ensures we only modify files with recognizable Fastify route structure
+- Only modifies the first route() call found in the file to avoid unintended changes
+
+**Files Created:**
+- src/ast-modifier.ts (128 lines)
+- src/__tests__/ast-modifier.test.ts (449 lines, 62 tests)
+
+**Testing Coverage:**
+- Basic modification with all quote styles (single, double, template)
+- Formatting preservation (indentation, tabs, trailing commas, property order, comments)
+- withTypeProvider chaining support
+- Complex scenarios (schemas, handlers, multiple routes)
+- Parameter handling in URLs
+- Safety checks (no route, no url field, non-object literal)
+- Edge cases (empty file, whitespace, special characters)
+- Real-world examples (typical Fastify files, TypeScript with type providers)
+
+---
