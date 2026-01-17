@@ -1,13 +1,55 @@
 # Fastify File-Based Routing CLI
 
-Automatic URL synchronization for Fastify file-based routing. This CLI tool watches your API route files and automatically keeps the `url` field in your Fastify route configuration in sync with the file path.
+With [@fastify/autoload] and a good naming convention, you can _almost_ achieve file-based routing in Fastify. But you still have the issue of keeping your route `url` in sync with your file path.
+
+This CLI tool watches your API route files and automatically keeps the `url` and `method` fields in your Fastify route configuration in sync with the file path.
+
+It also establishes a fully-featured naming convention similar to [Tanstack Router](https://tanstack.com/router/v1/docs/framework/react/routing/file-based-routing):
+
+| URL                         | File Name                         | Note                                                                                                                                                                 |
+| --------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/users`            | `src/api/users.get.ts`            | HTTP method is suffixed to the end of the file name                                                                                                                  |
+| `POST /api/users/:userId`   | `src/api/users/$userId.post.ts`   | Directories become URL segments; `$` prefix becomes `:` for fastify route params                                                                                     |
+| `DELETE /api/users/:userId` | `src/api/users.$userId.delete.ts` | Dots can also be used to separate params from the rest of the file name                                                                                              |
+| `POST /api/login`           | `src/api/_auth/login.post.ts`     | Files/folders starting with `_` are excluded from URL                                                                                                                |
+| `GET /api/files`            | `src/api/files/index.get.ts`      | `index` files map to parent path, but [cause all other files in that dir to be ignored](https://github.com/fastify/fastify-autoload?tab=readme-ov-file#dir-required) |
+
+> [!NOTE]
+> It is recommended to configure `@fastify/autoload` with the initial `/api` prefix so that your routes match your file structure exactly, but that is not required. If it's missing, the previous exmples should remove `/api` from the beginning of the URLs.
+>
+> ```ts
+> fastify.register(autoLoad, {
+>   dir: path.join(import.meta.dirname, 'api'),
+>   options: {prefix: '/api'},
+> })
+> ```
+
+> [!important]
+>
+> `@fastify/autoload` has a [restriction](https://github.com/fastify/fastify-autoload?tab=readme-ov-file#dir-required) where if a directory contains an `index` file, it will only load that file and ignore other files in the same directory. So this tool inherits that same limitation.
+
+## Features
+
+- **Zero Configuration**: Works out of the box with sensible defaults
+- **File Watching**: Automatically detects file additions, changes, and deletions
+- **Safe Modifications**: Preserves code formatting, indentation, comments, and quote styles
+- **Conflict Detection**: Automatically resolves URL conflicts with clear warnings
+- **Graceful Shutdown**: Clean exit on Ctrl+C
+
+## Requirements
+
+1. [Bun](https://bun.sh) is installed
+2. [@fastify/autoload] is used to load routes
+3. Define your routes inside of the `src/api` directory
+4. Your routes are defined with `fastify.route()`, not the shorthand methods like `fastify.get()` or `fastify.post()`
+
+[@fastify/autoload]: https://github.com/fastify/fastify-autoload
 
 ## Installation
 
-```bash
-# fastify-file-routes depends on bun being installed globally
-npm i -g bun
+> Prerequisite: You must have [Bun](https://bun.sh) installed globally.
 
+```bash
 # Creates a global `ffr` cli command
 npm i -g fastify-file-routes
 ```
@@ -34,9 +76,6 @@ The CLI will:
 ```bash
 # Run in quiet mode (minimal output)
 ffr --quiet
-
-# Or use the short flag
-ffr -q
 ```
 
 ## How it works
@@ -60,7 +99,7 @@ The tool follows file-based routing conventions to automatically generate URLs f
 
 ### HTTP Methods
 
-- Supported methods: `.get.ts`, `.post.ts`, `.put.ts`, `.patch.ts`, `.delete.ts`
+- Supported methods: GET, POST, PUT, PATCH, DELETE
 - Both `.ts` and `.js` extensions are supported
 
 ### Example File Structure
@@ -68,7 +107,7 @@ The tool follows file-based routing conventions to automatically generate URLs f
 ```
 src/api/
 ├── users/
-│   ├── index.get.ts          → GET /users
+│   ├── index.get.ts           → GET /users
 │   ├── $userId.get.ts         → GET /users/:userId
 │   └── $userId.patch.ts       → PATCH /users/:userId
 ├── products/
@@ -129,18 +168,3 @@ bun typecheck
 # Linting
 bun lint
 ```
-
-## Features
-
-- **Zero Configuration**: Works out of the box with sensible defaults
-- **File Watching**: Automatically detects file additions, changes, and deletions
-- **Safe Modifications**: Preserves code formatting, indentation, comments, and quote styles
-- **Conflict Detection**: Automatically resolves URL conflicts with clear warnings
-- **TypeScript Support**: Full TypeScript support with type-safe route files
-- **Graceful Shutdown**: Clean exit on Ctrl+C
-
-## Requirements
-
-- Bun runtime
-- Fastify route files in `src/api` directory
-- Routes must use the standard Fastify route registration pattern with `url` and `method` fields
