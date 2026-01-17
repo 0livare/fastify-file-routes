@@ -8,7 +8,73 @@ import {filePathToUrlPath} from './path-mapper'
 import {detectAndResolveConflicts} from './conflict-detector'
 import type {RouteFileMetadata} from './file-discovery'
 
+function showHelp() {
+  console.log(chalk.bold.blue('🚀 Fastify File-Based Routing CLI'))
+  console.log()
+  console.log(
+    chalk.gray(
+      'Automatically synchronizes Fastify route URLs with their file paths.',
+    ),
+  )
+  console.log()
+  console.log(chalk.bold('Usage:'))
+  console.log('  fbr              ' + chalk.gray('Watch src/api for changes'))
+  console.log('  fbr --help       ' + chalk.gray('Show this help message'))
+  console.log('  fbr -h           ' + chalk.gray('Show this help message'))
+  console.log()
+  console.log(chalk.bold('How it works:'))
+  console.log(
+    chalk.gray('  • Scans your src/api directory for Fastify route files'),
+  )
+  console.log(
+    chalk.gray(
+      '  • Automatically updates the "url" field to match the file path',
+    ),
+  )
+  console.log(chalk.gray('  • Watches for file changes and keeps URLs in sync'))
+  console.log()
+  console.log(chalk.bold('Routing conventions:'))
+  console.log(
+    chalk.gray('  • src/api/users.get.ts              → url: "/users" (GET)'),
+  )
+  console.log(
+    chalk.gray(
+      '  • src/api/users/$id.get.ts          → url: "/users/:id" (GET)',
+    ),
+  )
+  console.log(
+    chalk.gray('  • src/api/users/index.post.ts       → url: "/users" (POST)'),
+  )
+  console.log(
+    chalk.gray('  • src/api/_auth/login.post.ts       → url: "/login" (POST)'),
+  )
+  console.log()
+  console.log(chalk.bold('Supported HTTP methods:'))
+  console.log(chalk.gray('  GET, POST, PUT, PATCH, DELETE'))
+  console.log()
+  console.log(chalk.bold('Examples:'))
+  console.log(chalk.cyan('  # Start watching your API directory'))
+  console.log('  $ fbr')
+  console.log()
+  console.log(chalk.cyan('  # The CLI will:'))
+  console.log(chalk.gray('  • Scan all route files and fix any incorrect URLs'))
+  console.log(chalk.gray('  • Watch for new/modified/deleted route files'))
+  console.log(
+    chalk.gray('  • Automatically update URLs when files are moved or renamed'),
+  )
+  console.log()
+  console.log(chalk.bold('More info:'))
+  console.log(chalk.gray('  https://github.com/0livare/fastify-fbr-cli'))
+  console.log()
+}
+
 async function main() {
+  // Check for help flag
+  const args = process.argv.slice(2)
+  if (args.includes('--help') || args.includes('-h')) {
+    showHelp()
+    process.exit(0)
+  }
   const apiDir = path.join(process.cwd(), 'src/api')
 
   console.log(chalk.bold.blue('🚀 Fastify File-Based Routing CLI'))

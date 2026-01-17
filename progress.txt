@@ -549,3 +549,78 @@ Press Ctrl+C to stop watching
 
 ---
 
+## Help Command Documentation (Complete)
+
+**Date:** 2026-01-16
+
+**Summary:**
+- Added --help/-h flag support to the CLI
+- Implemented showHelp() function in src/watch.ts
+- Displays comprehensive help documentation including usage, routing conventions, supported methods, and examples
+- All content is specific to Fastify file-based routing (no references to Tanstack Router or easy-install)
+- Uses chalk for colorized, user-friendly output
+- CLI now checks for help flags before running the main watch functionality
+- All checks pass: typecheck (0 errors), test (230/230), and lint (prettier + tsc)
+
+**Key Features:**
+- Usage examples showing fbr command with --help/-h flags
+- Detailed "How it works" section explaining the tool's functionality
+- Routing conventions with real examples (parameters, index files, pathless layouts)
+- List of supported HTTP methods (GET, POST, PUT, PATCH, DELETE)
+- Examples section showing what happens when the CLI runs
+- Link to GitHub repository for more information
+
+**Files Modified:**
+- src/watch.ts: Added showHelp() function and argument parsing for --help/-h flags
+
+**Help Output:**
+```
+🚀 Fastify File-Based Routing CLI
+Automatically synchronizes Fastify route URLs with their file paths.
+
+Usage:
+  fbr              Watch src/api for changes
+  fbr --help       Show this help message
+  fbr -h           Show this help message
+
+How it works:
+  • Scans your src/api directory for Fastify route files
+  • Automatically updates the "url" field to match the file path
+  • Watches for file changes and keeps URLs in sync
+
+Routing conventions:
+  • src/api/users.get.ts              → url: "/users" (GET)
+  • src/api/users/$id.get.ts          → url: "/users/:id" (GET)
+  • src/api/users/index.post.ts       → url: "/users" (POST)
+  • src/api/_auth/login.post.ts       → url: "/login" (POST)
+
+Supported HTTP methods:
+  GET, POST, PUT, PATCH, DELETE
+
+Examples:
+  # Start watching your API directory
+  $ fbr
+
+  # The CLI will:
+  • Scan all route files and fix any incorrect URLs
+  • Watch for new/modified/deleted route files
+  • Automatically update URLs when files are moved or renamed
+
+More info:
+  https://github.com/0livare/fastify-fbr-cli
+```
+
+**Testing:**
+- Manually tested with `bun src/watch.ts --help`
+- Manually tested with `bun src/watch.ts -h`
+- Both flags correctly display help and exit without starting the watcher
+- All existing tests (230 tests) continue to pass
+
+**Notes:**
+- The help documentation is comprehensive and user-friendly
+- All content is specific to Fastify file-based routing
+- No references to old package names or Tanstack Router remain
+- The CLI now has proper help documentation accessible via --help or -h
+
+---
+
