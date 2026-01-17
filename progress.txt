@@ -53,3 +53,31 @@
 - src/__tests__/path-mapper.test.ts (178 lines, 33 tests)
 
 ---
+
+## HTTP Method Extraction (Complete)
+
+**Date:** 2026-01-16
+
+**Summary:**
+- Created src/method-extractor.ts with extractHttpMethod function
+- Implemented function to extract HTTP method from filename suffix (e.g., '.get.ts' → 'GET')
+- Supports all standard REST methods: GET, POST, PUT, PATCH, DELETE
+- Supports both .ts and .js file extensions
+- Returns null for files without valid method suffixes
+- Case-insensitive matching (e.g., .GET.ts, .get.ts, .GeT.ts all work)
+- Created comprehensive test suite with 26 tests covering all scenarios
+- All tests pass (59/59 total across all test files)
+- All checks pass: typecheck, test, and lint
+
+**Key Decisions:**
+- Used regex pattern to match .method.(ts|js) at end of filename
+- Implemented case-insensitive matching with case-fold flag in regex
+- Exported HttpMethod type for type safety in consuming code
+- Returns null instead of throwing for invalid inputs
+- Function works with full paths, relative paths, and bare filenames
+
+**Files Created:**
+- src/method-extractor.ts (31 lines)
+- src/__tests__/method-extractor.test.ts (148 lines, 26 tests)
+
+---

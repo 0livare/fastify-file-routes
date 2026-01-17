@@ -38,8 +38,8 @@
       "Write unit tests for all supported methods and edge cases",
       "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
     ],
-    "started": false,
-    "complete": false
+    "started": true,
+    "complete": true
   },
   {
     "category": "AST Parsing",
