@@ -8,7 +8,7 @@ import {synchronizeRouteFile} from './route-synchronizer'
 import {filePathToUrlPath} from './path-mapper'
 import {extractHttpMethod} from './method-extractor'
 import {generateRouteTemplate} from './route-template'
-import {help} from './commands'
+import {help, version} from './commands'
 import {parseCliArgs} from './cli'
 
 async function main() {
@@ -16,6 +16,11 @@ async function main() {
 
   if (args.help) {
     help()
+    process.exit(0)
+  }
+
+  if (args.version) {
+    version()
     process.exit(0)
   }
 

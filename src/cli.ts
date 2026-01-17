@@ -8,6 +8,7 @@ export function parseCliArgs() {
       args: Bun.argv.slice(2), // Skip bun executable and script path
       options: {
         help: {type: 'boolean', short: 'h'},
+        version: {type: 'boolean', short: 'v'},
         quiet: {type: 'boolean', short: 'q'},
       },
       strict: true,

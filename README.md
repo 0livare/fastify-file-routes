@@ -72,6 +72,7 @@ The CLI will:
 
 - `--help`, `-h`: Show help message
 - `--quiet`, `-q`: Suppress all output except initial notification that the tool is watching
+- `--version`, `-v`: Show version number
 
 ```bash
 # Run in quiet mode (minimal output)

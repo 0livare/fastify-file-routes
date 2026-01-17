@@ -13,6 +13,8 @@ export function help() {
   console.log('  fbr              ' + chalk.gray('Watch src/api for changes'))
   console.log('  fbr --help       ' + chalk.gray('Show this help message'))
   console.log('  fbr -h           ' + chalk.gray('Show this help message'))
+  console.log('  fbr --version    ' + chalk.gray('Show version number'))
+  console.log('  fbr -v           ' + chalk.gray('Show version number'))
   console.log(
     '  fbr --quiet      ' +
       chalk.gray('Suppress all output except initial notification'),
