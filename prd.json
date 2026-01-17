@@ -185,5 +185,17 @@
     ],
     "started": true,
     "complete": true
+  },
+  {
+    "category": "documentation",
+    "description": "Fix the --help/-h documentation to reflect the new package functionality",
+    "steps": [
+      "Update the description to explain Fastify file-based routing synchronization",
+      "Remove any references to Tanstack Router or easy-install options",
+      "Add examples of usage specific to Fastify file-based routing",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
   }
 ]

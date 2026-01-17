@@ -6,7 +6,7 @@
   "license": "ISC",
   "repository": "https://github.com/0livare/fastify-fbr-cli",
   "bin": {
-    "fastify-fbr": "src/watch.ts"
+    "fbr": "src/watch.ts"
   },
   "files": [
     "src"
