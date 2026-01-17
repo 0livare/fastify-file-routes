@@ -81,3 +81,33 @@
 - src/__tests__/method-extractor.test.ts (148 lines, 26 tests)
 
 ---
+
+## AST Parsing (Complete)
+
+**Date:** 2026-01-16
+
+**Summary:**
+- Created src/ast-parser.ts with parseRouteFile function
+- Implemented AST parsing using TypeScript compiler API (ts.createSourceFile)
+- Extracts 'url' and 'method' fields from Fastify route() call configuration objects
+- Handles route() calls with or without withTypeProvider() chaining
+- Supports all quote styles: single quotes, double quotes, and template literals (without expressions)
+- Handles multiple route() calls by extracting only from the first one found
+- Returns RouteConfig interface with url and method fields (null if not found)
+- Created comprehensive test suite with 49 tests covering all scenarios
+- All tests pass (87/87 total across all test files)
+- All checks pass: typecheck, test, and lint
+
+**Key Decisions:**
+- Used TypeScript compiler API (already in dependencies) instead of Babel for AST parsing
+- Implemented visitor pattern with ts.forEachChild for tree traversal
+- Added early termination after finding first route() call to avoid overwriting values
+- Handles both direct fastify.route() calls and chained calls like fastify.withTypeProvider().route()
+- Returns null for template literals with expressions (dynamic URLs not supported)
+- Returns RouteConfig with nullable fields for graceful handling of missing data
+
+**Files Created:**
+- src/ast-parser.ts (87 lines)
+- src/__tests__/ast-parser.test.ts (425 lines, 49 tests)
+
+---
