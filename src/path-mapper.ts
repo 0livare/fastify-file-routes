@@ -1,5 +1,5 @@
 /**
- * Converts a file path to a URL path following Tanstack Router conventions.
+ * Converts a file path to a URL path following file-based routing conventions.
  *
  * Rules:
  * - Strip src/api prefix

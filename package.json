@@ -1,19 +1,18 @@
 {
-  "name": "easy-install",
-  "version": "0.0.12",
-  "description": "Single command to install dependencies with the correct package manager for any JavaScript project.",
+  "name": "fastify-fbr-cli",
+  "version": "0.0.1",
+  "description": "Automatic URL synchronization for Fastify file-based routing. Watches your API route files and keeps the url field in sync with the file path.",
   "author": "Zach Olivare <https://github.com/0livare>",
   "license": "ISC",
-  "repository": "https://github.com/0livare/easy-install",
+  "repository": "https://github.com/0livare/fastify-fbr-cli",
   "bin": {
-    "in": "src/in.ts",
     "fastify-fbr": "src/watch.ts"
   },
   "files": [
     "src"
   ],
   "scripts": {
-    "in": "bun src/in.ts",
+    "watch": "bun src/watch.ts",
     "link": "bun link",
     "lint": "tsc && prettier --check .",
     "test": "vitest run",
@@ -33,17 +32,16 @@
     "vitest": "^4.0.17"
   },
   "keywords": [
-    "smart",
+    "fastify",
+    "routing",
+    "file-based",
+    "file-based routing",
     "automatic",
-    "automagic",
-    "install",
-    "installer",
-    "dependencies",
-    "package manager",
-    "npm",
-    "yarn",
-    "pnpm",
-    "bun"
+    "cli",
+    "url",
+    "synchronization",
+    "watch",
+    "watcher"
   ],
   "packageManager": "bun@1.2.7"
 }

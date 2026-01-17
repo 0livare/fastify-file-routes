@@ -1,85 +1,80 @@
-# Easy Install
+# Fastify File-Based Routing CLI
 
-Single command to install dependencies with the correct package manager for any JavaScript project.
+Automatic URL synchronization for Fastify file-based routing. This CLI tool watches your API route files and automatically keeps the `url` field in your Fastify route configuration in sync with the file path.
 
 ## Installation
 
 ```bash
-# easy-install depends on bun being installed globally
+# fastify-fbr-cli depends on bun being installed globally
 npm i -g bun
 
-# Creates a global `in` cli command
-npm i -g easy-install
+# Creates a global `fastify-fbr` cli command
+npm i -g fastify-fbr-cli
 ```
 
 ## Usage
 
-Run the `in` command, optionally followed by dependencies you want to install.
+Run the `fastify-fbr` command from your project root to watch your API routes:
 
 ```bash
-in [flags] [...<pkg>]
+fastify-fbr
 ```
 
-```bash
-Flags:
-  -d, -D, --dev, --save-dev        Install pkg as a development dependency
-  -z, --frozen, --frozen-lockfile  Disallow changes to lockfile
-  -v, --version                    Print version number
-  -h, --help                       Print help information
-```
+The CLI will:
 
-## Examples
-
-### Install all project dependencies
-
-```bash
-in
-# might run: npm install
-# or: yarn install
-# or: pnpm install
-# or: bun install
-```
-
-### Add a project dependency
-
-```bash
-in express
-# might run: npm install express
-# or: yarn add express
-# or: pnpm add express
-# or: bun add express
-```
-
-### Add a project development dependency
-
-```bash
-in --dev nodemon
-# might run: npm install --save-dev nodemon
-# or: yarn add --dev nodemon
-# or: pnpm add --save-dev nodemon
-# or: bun add --dev nodemon
-```
-
-### Add multiple project dependencies at once
-
-```bash
-in react immer axios
-```
+1. Perform an initial scan of all routes in `src/api`
+2. Fix any URLs that don't match their file paths
+3. Watch for file changes and automatically update URLs
 
 ## How it works
 
-Easy Install determines the correct package manager based on the lock file present in the project directory.
+The tool follows file-based routing conventions to automatically generate URLs from file paths:
 
-`in` can be run from any subdirectory of a project, and it will find the closest lock file in any parent directory relative to where the command is run.
+### Route Parameter Syntax
 
-### Supported package managers
+- `$userId` or `.$userId` → `:userId` in URL
+- Example: `src/api/users/$userId.get.ts` → `/users/:userId`
 
-| Package Manager | Lock File               |
-| --------------- | ----------------------- |
-| npm             | `package-lock.json`     |
-| yarn            | `yarn.lock`             |
-| pnpm            | `pnpm-lock.yaml`        |
-| bun             | `bun.lock`, `bun.lockb` |
+### Index Files
+
+- `index.get.ts` maps to parent path
+- Example: `src/api/users/index.get.ts` → `/users`
+
+### Pathless Layouts
+
+- Files/folders starting with `_` are excluded from URL
+- Example: `src/api/_auth/login.post.ts` → `/login`
+
+### HTTP Methods
+
+- Supported methods: `.get.ts`, `.post.ts`, `.put.ts`, `.patch.ts`, `.delete.ts`
+- Both `.ts` and `.js` extensions are supported
+
+### Example File Structure
+
+```
+src/api/
+├── users/
+│   ├── index.get.ts          → GET /users
+│   ├── $userId.get.ts         → GET /users/:userId
+│   └── $userId.patch.ts       → PATCH /users/:userId
+├── products/
+│   ├── index.get.ts          → GET /products
+│   └── $id/
+│       └── reviews.get.ts    → GET /products/:id/reviews
+└── _auth/
+    └── login.post.ts         → POST /login
+```
+
+## Conflict Resolution
+
+If multiple files would map to the same URL (e.g., files with different logic but same path and method), the tool automatically resolves conflicts by appending numeric suffixes:
+
+- First file: `/users/:id`
+- Second file: `/users/:id-2`
+- Third file: `/users/:id-3`
+
+Warnings are logged when conflicts are detected.
 
 ## Development
 
@@ -91,14 +86,48 @@ To install dependencies:
 bun install
 ```
 
-To run:
+To run the CLI in development:
 
 ```bash
-bun in
+bun src/watch.ts
 ```
 
-To link the global `in` command to this local development version:
+To link the global `fastify-fbr` command to this local development version:
 
 ```bash
 bun link
 ```
+
+### Running Tests
+
+```bash
+# Run all tests
+bun test
+
+# Run tests in watch mode
+bun test:watch
+
+# Run tests with UI
+bun test:ui
+
+# Type checking
+bun typecheck
+
+# Linting
+bun lint
+```
+
+## Features
+
+- **Zero Configuration**: Works out of the box with sensible defaults
+- **File Watching**: Automatically detects file additions, changes, and deletions
+- **Safe Modifications**: Preserves code formatting, indentation, comments, and quote styles
+- **Conflict Detection**: Automatically resolves URL conflicts with clear warnings
+- **TypeScript Support**: Full TypeScript support with type-safe route files
+- **Graceful Shutdown**: Clean exit on Ctrl+C
+
+## Requirements
+
+- Bun runtime
+- Fastify route files in `src/api` directory
+- Routes must use the standard Fastify route registration pattern with `url` and `method` fields

@@ -500,3 +500,52 @@ Press Ctrl+C to stop watching
 
 ---
 
+## CLI Updates (Complete)
+
+**Date:** 2026-01-16
+
+**Summary:**
+- Updated package.json with new package name: fastify-fbr-cli
+- Updated package description to reflect Fastify file-based routing functionality
+- Removed old "in" command from bin, kept only "fastify-fbr" command
+- Updated npm scripts: replaced "in" script with "watch" script
+- Updated keywords to be relevant to Fastify routing instead of package management
+- Completely rewrote README.md with comprehensive documentation for the new package
+- Removed Tanstack Router reference from src/path-mapper.ts comment
+- All checks pass: typecheck (0 errors), test (230/230), and lint (prettier + tsc)
+
+**Key Changes:**
+- Package name: easy-install → fastify-fbr-cli
+- Package version reset to 0.0.1
+- Repository URL updated to point to fastify-fbr-cli
+- Binary command: "in" removed, "fastify-fbr" is the only CLI command
+- Keywords updated to reflect routing/Fastify focus instead of package manager focus
+- README completely rewritten with:
+  - Installation instructions
+  - Usage examples with fastify-fbr command
+  - Detailed explanation of routing conventions
+  - File structure examples
+  - Conflict resolution documentation
+  - Development guide with all test/lint commands
+
+**Files Modified:**
+- package.json (name, version, description, repository, bin, scripts, keywords)
+- README.md (complete rewrite)
+- src/path-mapper.ts (removed Tanstack Router reference in comment)
+
+**Documentation Highlights:**
+- Clear installation and usage instructions
+- Comprehensive routing convention explanations (parameters, index files, pathless layouts)
+- Real-world file structure examples
+- Conflict resolution behavior documented
+- Development workflow documented
+- All features and benefits clearly listed
+
+**Notes:**
+- All references to "easy-install", "tsr", and "Tanstack Router" have been removed from the package
+- The package is now properly branded as "fastify-fbr-cli"
+- Documentation is production-ready for npm publication
+- All tests continue to pass with no regressions
+
+---
+
