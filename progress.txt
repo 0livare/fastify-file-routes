@@ -5,3 +5,23 @@
 (Patterns discovered during implementation)
 
 ---
+
+## Test Setup (Complete)
+
+**Date:** 2026-01-16
+
+**Summary:**
+- Installed vitest and @vitest/ui for testing infrastructure
+- Created vitest.config.ts with node environment and coverage settings
+- Added test, test:watch, test:ui, and typecheck scripts to package.json
+- Created sample test file at src/__tests__/sample.test.ts to verify setup
+- Updated tsconfig.json to exclude router-cli directory from type checking
+- Formatted all files with prettier to ensure consistent code style
+- All checks pass: typecheck, test, and lint
+
+**Key Decisions:**
+- Using vitest instead of jest for modern ESM support and speed
+- Excluded router-cli directory from tsconfig as it's example code with missing dependencies
+- Added both test:watch and test:ui scripts for development flexibility
+
+---

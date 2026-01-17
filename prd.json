@@ -9,8 +9,8 @@
       "Add test script to package.json",
       "Run initial test to confirm setup is working"
     ],
-    "started": false,
-    "complete": false
+    "started": true,
+    "complete": true
   },
   {
     "category": "Core Path Mapping",

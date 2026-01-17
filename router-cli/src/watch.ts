@@ -4,7 +4,7 @@ import {
   getConfig,
   resolveConfigPath,
 } from '@tanstack/router-generator'
-import type { FileEventType } from '@tanstack/router-generator'
+import type {FileEventType} from '@tanstack/router-generator'
 
 export function watch(root: string) {
   const configPath = resolveConfigPath({
@@ -16,7 +16,7 @@ export function watch(root: string) {
 
   const generatorWatcher = () => {
     const config = getConfig()
-    const generator = new Generator({ config, root })
+    const generator = new Generator({config, root})
 
     watcher.close()
 
@@ -49,7 +49,7 @@ export function watch(root: string) {
             break
         }
         if (type) {
-          return generator.run({ path, type })
+          return generator.run({path, type})
         }
         return generator.run()
       })
