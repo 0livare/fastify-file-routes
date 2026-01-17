@@ -25,3 +25,31 @@
 - Added both test:watch and test:ui scripts for development flexibility
 
 ---
+
+## Core Path Mapping (Complete)
+
+**Date:** 2026-01-16
+
+**Summary:**
+- Created src/path-mapper.ts with filePathToUrlPath function
+- Implemented core logic to convert file paths to URL paths following Tanstack Router conventions
+- Handles route parameters with both $ and .$ syntax (e.g., $userId and .$userId → :userId)
+- Handles index files that map to parent path
+- Handles pathless layouts (underscore prefix) that are excluded from URL path
+- Strips src/api prefix from all generated URLs
+- Strips HTTP method suffixes (.get.ts, .post.ts, etc.)
+- Created comprehensive test suite with 33 tests covering all scenarios
+- All tests pass (33/33)
+- All checks pass: typecheck, test, and lint
+
+**Key Decisions:**
+- Implemented as a pure function that takes a file path and returns a URL path
+- Used string manipulation and array filtering for clean, readable code
+- Comprehensive test coverage including basic paths, parameters, index files, pathless layouts, and complex nested scenarios
+- Function returns string | null to allow for potential invalid path handling in future
+
+**Files Created:**
+- src/path-mapper.ts (62 lines)
+- src/__tests__/path-mapper.test.ts (178 lines, 33 tests)
+
+---
