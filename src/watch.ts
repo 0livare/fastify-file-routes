@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import path from 'node:path'
+import fs from 'node:fs'
 import chalk from 'chalk'
 import {performInitialScan} from './initial-scan'
 import {createFileWatcher, setupGracefulShutdown} from './file-watcher'
@@ -7,6 +8,7 @@ import {synchronizeRouteFile} from './route-synchronizer'
 import {filePathToUrlPath} from './path-mapper'
 import {detectAndResolveConflicts} from './conflict-detector'
 import {extractHttpMethod} from './method-extractor'
+import {generateRouteTemplate} from './route-template'
 import type {RouteFileMetadata} from './file-discovery'
 
 function showHelp() {
@@ -113,10 +115,10 @@ async function main() {
 
       if (event.type === 'add') {
         if (!quiet) console.log(chalk.green(`➕ File added: ${relativePath}`))
-        handleFileChange(event.filePath, apiDir, quiet)
+        handleFileChange(event.filePath, apiDir, quiet, true)
       } else if (event.type === 'change') {
         if (!quiet) console.log(chalk.blue(`📝 File changed: ${relativePath}`))
-        handleFileChange(event.filePath, apiDir, quiet)
+        handleFileChange(event.filePath, apiDir, quiet, false)
       } else if (event.type === 'unlink') {
         if (!quiet) console.log(chalk.red(`🗑️  File deleted: ${relativePath}`))
       }
@@ -144,7 +146,12 @@ async function main() {
 /**
  * Handle file addition or change by synchronizing the route
  */
-function handleFileChange(filePath: string, apiDir: string, quiet: boolean = false): void {
+function handleFileChange(
+  filePath: string,
+  apiDir: string,
+  quiet: boolean = false,
+  isNewFile: boolean = false,
+): void {
   try {
     // Calculate the expected URL for this file
     const relativePath = path.relative(process.cwd(), filePath)
@@ -160,6 +167,20 @@ function handleFileChange(filePath: string, apiDir: string, quiet: boolean = fal
     if (!expectedMethod) {
       if (!quiet) console.log(chalk.gray(`  ⏭️  Skipping: no valid HTTP method in filename`))
       return
+    }
+
+    // Check if this is a new empty file that should be scaffolded
+    if (isNewFile) {
+      const fileContent = fs.readFileSync(filePath, 'utf-8').trim()
+      if (fileContent === '') {
+        // Scaffold the file with the template
+        const template = generateRouteTemplate(expectedUrl, expectedMethod)
+        fs.writeFileSync(filePath, template, 'utf-8')
+        if (!quiet) {
+          console.log(chalk.green(`  ✨ Scaffolded new route: ${expectedUrl} (${expectedMethod})`))
+        }
+        return
+      }
     }
 
     // Synchronize the file (both URL and method)

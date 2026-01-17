@@ -1192,4 +1192,204 @@ export default async function (fastify: FastifyInstance) {
       expect(updatedContent).toContain("return { data: 'test' }")
     })
   })
+
+  describe('File Scaffolding (New Empty Files)', () => {
+    // Helper function to create a watcher that scaffolds empty files
+    function createScaffoldingWatcher(testDir: string) {
+      const {generateRouteTemplate} = require('../route-template')
+      const {filePathToUrlPath} = require('../path-mapper')
+      const {extractHttpMethod} = require('../method-extractor')
+
+      const onEvent = vi.fn((event: WatchEvent) => {
+        if (event.type === 'add') {
+          // Check if file is empty and scaffold it
+          const fileContent = fs.readFileSync(event.filePath, 'utf-8').trim()
+          if (fileContent === '') {
+            // Calculate path relative to testDir (which simulates src/api)
+            const relativeToTestDir = path.relative(testDir, event.filePath)
+            // Pretend it's in src/api for the path mapper
+            const pathForMapper = path.join('src/api', relativeToTestDir)
+            const expectedUrl = filePathToUrlPath(pathForMapper)
+            const expectedMethod = extractHttpMethod(event.filePath)
+
+            if (expectedUrl && expectedMethod) {
+              const template = generateRouteTemplate(expectedUrl, expectedMethod)
+              fs.writeFileSync(event.filePath, template, 'utf-8')
+            }
+          }
+        }
+      })
+
+      return createFileWatcher(testDir, {onEvent})
+    }
+
+    it('should scaffold new empty file with correct template', async () => {
+      const watcher = createScaffoldingWatcher(testDir)
+      await delay(200)
+
+      // Create an empty route file
+      const newFilePath = path.join(testDir, 'users.get.ts')
+      fs.writeFileSync(newFilePath, '', 'utf-8')
+
+      await delay(400)
+
+      // Verify the file was scaffolded
+      const content = fs.readFileSync(newFilePath, 'utf-8')
+      expect(content).toContain("import type { FastifyInstance } from 'fastify'")
+      expect(content).toContain("import type { FastifyZodOpenApiTypeProvider }")
+      expect(content).toContain("import { z } from 'zod'")
+      expect(content).toContain("method: 'GET'")
+      expect(content).toContain("url: '/users'")
+      expect(content).toContain('withTypeProvider<FastifyZodOpenApiTypeProvider>()')
+      expect(content).toContain('async handler(req, reply)')
+
+      await watcher.close()
+    })
+
+    it('should scaffold new empty file with POST method', async () => {
+      const watcher = createScaffoldingWatcher(testDir)
+      await delay(200)
+
+      fs.mkdirSync(path.join(testDir, 'users'), {recursive: true})
+      const newFilePath = path.join(testDir, 'users/index.post.ts')
+      fs.writeFileSync(newFilePath, '', 'utf-8')
+
+      await delay(400)
+
+      const content = fs.readFileSync(newFilePath, 'utf-8')
+      expect(content).toContain("method: 'POST'")
+      expect(content).toContain("url: '/users'")
+
+      await watcher.close()
+    })
+
+    it('should scaffold new empty file with route parameters', async () => {
+      const watcher = createScaffoldingWatcher(testDir)
+      await delay(200)
+
+      fs.mkdirSync(path.join(testDir, 'users'), {recursive: true})
+      const newFilePath = path.join(testDir, 'users/$userId.patch.ts')
+      fs.writeFileSync(newFilePath, '', 'utf-8')
+
+      await delay(400)
+
+      const content = fs.readFileSync(newFilePath, 'utf-8')
+      expect(content).toContain("method: 'PATCH'")
+      expect(content).toContain("url: '/users/:userId'")
+
+      await watcher.close()
+    })
+
+    it('should NOT scaffold file that already has content', async () => {
+      const existingContent = `
+export default async function (fastify) {
+  // Custom implementation
+  console.log('existing')
+}
+`
+      const watcher = createScaffoldingWatcher(testDir)
+      await delay(200)
+
+      const newFilePath = path.join(testDir, 'existing.get.ts')
+      fs.writeFileSync(newFilePath, existingContent, 'utf-8')
+
+      await delay(400)
+
+      // File should keep its original content (not be scaffolded)
+      const content = fs.readFileSync(newFilePath, 'utf-8')
+      expect(content).toContain('Custom implementation')
+      expect(content).toContain('existing')
+      // Should not have scaffolded imports
+      expect(content).not.toContain('FastifyZodOpenApiTypeProvider')
+
+      await watcher.close()
+    })
+
+    it('should scaffold multiple new empty files correctly', async () => {
+      const watcher = createScaffoldingWatcher(testDir)
+      await delay(200)
+
+      const files = [
+        {path: 'users.get.ts', method: 'GET', url: '/users'},
+        {path: 'users.post.ts', method: 'POST', url: '/users'},
+        {path: 'products/$id.delete.ts', method: 'DELETE', url: '/products/:id'},
+      ]
+
+      // Create all files as empty
+      for (const file of files) {
+        const dir = path.dirname(path.join(testDir, file.path))
+        fs.mkdirSync(dir, {recursive: true})
+        fs.writeFileSync(path.join(testDir, file.path), '', 'utf-8')
+      }
+
+      await delay(600)
+
+      // Verify each file was scaffolded correctly
+      for (const file of files) {
+        const content = fs.readFileSync(path.join(testDir, file.path), 'utf-8')
+        expect(content).toContain(`method: '${file.method}'`)
+        expect(content).toContain(`url: '${file.url}'`)
+        expect(content).toContain('FastifyInstance')
+      }
+
+      await watcher.close()
+    })
+
+    it('should scaffold deeply nested route files', async () => {
+      const watcher = createScaffoldingWatcher(testDir)
+      await delay(200)
+
+      const deepPath = path.join(testDir, 'api/v2/orgs/$orgId/projects/$projectId')
+      fs.mkdirSync(deepPath, {recursive: true})
+      const newFilePath = path.join(deepPath, 'tasks.get.ts')
+      fs.writeFileSync(newFilePath, '', 'utf-8')
+
+      await delay(400)
+
+      const content = fs.readFileSync(newFilePath, 'utf-8')
+      expect(content).toContain("method: 'GET'")
+      expect(content).toContain("url: '/api/v2/orgs/:orgId/projects/:projectId/tasks'")
+
+      await watcher.close()
+    })
+
+    it('should create valid TypeScript that can be parsed', async () => {
+      const watcher = createScaffoldingWatcher(testDir)
+      await delay(200)
+
+      const newFilePath = path.join(testDir, 'test.get.ts')
+      fs.writeFileSync(newFilePath, '', 'utf-8')
+
+      await delay(400)
+
+      const content = fs.readFileSync(newFilePath, 'utf-8')
+
+      // Verify the generated file can be parsed
+      const {parseRouteFile} = require('../ast-parser')
+      expect(() => parseRouteFile(content)).not.toThrow()
+
+      const routeConfig = parseRouteFile(content)
+      expect(routeConfig.url).toBe('/test')
+      expect(routeConfig.method).toBe('GET')
+
+      await watcher.close()
+    })
+
+    it('should handle file with only whitespace as empty', async () => {
+      const watcher = createScaffoldingWatcher(testDir)
+      await delay(200)
+
+      const newFilePath = path.join(testDir, 'whitespace.get.ts')
+      fs.writeFileSync(newFilePath, '  \n\t  \n  ', 'utf-8')
+
+      await delay(400)
+
+      // Since trim() is empty, should scaffold
+      const content = fs.readFileSync(newFilePath, 'utf-8')
+      expect(content).toContain('FastifyInstance')
+      expect(content).toContain("method: 'GET'")
+
+      await watcher.close()
+    })
+  })
 })
