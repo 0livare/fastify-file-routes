@@ -319,3 +319,50 @@
 - Test assertions must account for conflicts in realistic API structures
 
 ---
+## File Watching (Complete)
+
+**Date:** 2026-01-16
+
+**Summary:**
+- Installed chokidar@5.0.0 for file system watching
+- Created src/file-watcher.ts with createFileWatcher and setupGracefulShutdown functions
+- Implemented file system watching for src/api directory with recursive monitoring
+- Watches only .ts and .js files with valid HTTP method suffixes (.get, .post, .put, .patch, .delete)
+- Detects file additions, modifications, and deletions in real-time
+- Provides callback-based interface for onEvent, onReady, and onError
+- Handles graceful shutdown via SIGINT and SIGTERM signals
+- Created comprehensive test suite with 21 tests covering all scenarios
+- All tests pass (215/215 total across all test files)
+- All checks pass: typecheck, test, and lint
+
+**Key Decisions:**
+- Used chokidar for reliable cross-platform file watching with advanced features
+- Implemented ignored function to filter files by extension and HTTP method suffix
+- Fixed critical issue: ignored function must return false when stats is undefined (for directories during initial scan)
+- Used awaitWriteFinish option to debounce rapid file changes and ensure file stability before triggering events
+- Provided both onEvent callback (for all events) and setupGracefulShutdown helper for process cleanup
+- FileWatcher interface returns close method for manual cleanup
+- WatchEvent interface includes type ('add' | 'change' | 'unlink') and absolute filePath
+
+**Files Created:**
+- src/file-watcher.ts (143 lines)
+- src/__tests__/file-watcher.test.ts (570 lines, 21 tests)
+
+**Testing Coverage:**
+- Basic watcher creation and lifecycle (create, ready, close)
+- File addition detection (.ts, .js, multiple files, nested directories)
+- File change detection (single and multiple modifications)
+- File deletion detection (single and multiple deletions)
+- File filtering (non-route files, non-.ts/.js files, all HTTP methods)
+- Error handling (onError callback, non-existent directory)
+- Complex scenarios (rapid operations, full lifecycle, deep nesting)
+- Graceful shutdown setup (SIGINT/SIGTERM handlers)
+
+**Technical Challenges:**
+- Initial issue: files were not being detected due to directory being ignored
+- Root cause: chokidar's ignored function receives undefined stats for directories during initial scan
+- Solution: check `!stats || stats.isDirectory()` instead of just `stats?.isDirectory()` to avoid ignoring directories
+- This allows chokidar to traverse directories while still filtering files correctly
+
+---
+
