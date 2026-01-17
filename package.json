@@ -6,7 +6,8 @@
   "license": "ISC",
   "repository": "https://github.com/0livare/easy-install",
   "bin": {
-    "in": "src/in.ts"
+    "in": "src/in.ts",
+    "fastify-fbr": "src/watch.ts"
   },
   "files": [
     "src"
