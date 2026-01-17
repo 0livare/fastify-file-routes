@@ -21,6 +21,8 @@ function showHelp() {
   console.log('  fbr              ' + chalk.gray('Watch src/api for changes'))
   console.log('  fbr --help       ' + chalk.gray('Show this help message'))
   console.log('  fbr -h           ' + chalk.gray('Show this help message'))
+  console.log('  fbr --quiet      ' + chalk.gray('Suppress all output except initial notification'))
+  console.log('  fbr -q           ' + chalk.gray('Suppress all output except initial notification'))
   console.log()
   console.log(chalk.bold('How it works:'))
   console.log(
@@ -69,50 +71,57 @@ function showHelp() {
 }
 
 async function main() {
-  // Check for help flag
+  // Check for help and quiet flags
   const args = process.argv.slice(2)
   if (args.includes('--help') || args.includes('-h')) {
     showHelp()
     process.exit(0)
   }
+
+  const quiet = args.includes('--quiet') || args.includes('-q')
   const apiDir = path.join(process.cwd(), 'src/api')
 
-  console.log(chalk.bold.blue('🚀 Fastify File-Based Routing CLI'))
-  console.log(chalk.gray(`Watching: ${apiDir}\n`))
+  if (quiet) {
+    console.log(chalk.bold.blue('🚀 Fastify File-Based Routing CLI'))
+    console.log(chalk.gray(`Watching: ${apiDir}`))
+    console.log(chalk.gray('Press Ctrl+C to stop watching\n'))
+  } else {
+    console.log(chalk.bold.blue('🚀 Fastify File-Based Routing CLI'))
+    console.log(chalk.gray(`Watching: ${apiDir}\n`))
 
-  // Perform initial scan
-  console.log(chalk.bold('📋 Running initial scan...'))
-  const scanResult = performInitialScan(apiDir)
+    // Perform initial scan
+    console.log(chalk.bold('📋 Running initial scan...'))
+    const scanResult = performInitialScan(apiDir)
 
-  if (scanResult.totalFiles === 0) {
-    console.log(chalk.yellow('\n⚠️  No route files found in src/api'))
-    console.log(
-      chalk.gray('Create route files with .get.ts, .post.ts, etc. suffixes'),
-    )
-    process.exit(0)
+    if (scanResult.totalFiles === 0) {
+      console.log(chalk.yellow('\n⚠️  No route files found in src/api'))
+      console.log(
+        chalk.gray('Create route files with .get.ts, .post.ts, etc. suffixes'),
+      )
+    }
+
+    console.log() // Empty line for spacing
+
+    // Set up file watcher
+    console.log(chalk.bold.green('👀 Watching for changes...\n'))
   }
-
-  console.log() // Empty line for spacing
-
-  // Set up file watcher
-  console.log(chalk.bold.green('👀 Watching for changes...\n'))
 
   const watcher = createFileWatcher(apiDir, {
     onEvent: (event) => {
       const relativePath = path.relative(process.cwd(), event.filePath)
 
       if (event.type === 'add') {
-        console.log(chalk.green(`➕ File added: ${relativePath}`))
-        handleFileChange(event.filePath, apiDir)
+        if (!quiet) console.log(chalk.green(`➕ File added: ${relativePath}`))
+        handleFileChange(event.filePath, apiDir, quiet)
       } else if (event.type === 'change') {
-        console.log(chalk.blue(`📝 File changed: ${relativePath}`))
-        handleFileChange(event.filePath, apiDir)
+        if (!quiet) console.log(chalk.blue(`📝 File changed: ${relativePath}`))
+        handleFileChange(event.filePath, apiDir, quiet)
       } else if (event.type === 'unlink') {
-        console.log(chalk.red(`🗑️  File deleted: ${relativePath}`))
+        if (!quiet) console.log(chalk.red(`🗑️  File deleted: ${relativePath}`))
       }
     },
     onReady: () => {
-      console.log(chalk.gray('Press Ctrl+C to stop watching\n'))
+      if (!quiet) console.log(chalk.gray('Press Ctrl+C to stop watching\n'))
     },
     onError: (error) => {
       console.error(chalk.red('❌ Watcher error:'), error)
@@ -121,8 +130,10 @@ async function main() {
 
   // Set up graceful shutdown
   setupGracefulShutdown(watcher, () => {
-    console.log(chalk.yellow('\n\n👋 Stopping watcher...'))
-    console.log(chalk.gray('Goodbye!'))
+    if (!quiet) {
+      console.log(chalk.yellow('\n\n👋 Stopping watcher...'))
+      console.log(chalk.gray('Goodbye!'))
+    }
   })
 
   // Keep process running
@@ -132,14 +143,14 @@ async function main() {
 /**
  * Handle file addition or change by synchronizing the route
  */
-function handleFileChange(filePath: string, apiDir: string): void {
+function handleFileChange(filePath: string, apiDir: string, quiet: boolean = false): void {
   try {
     // Calculate the expected URL for this file
     const relativePath = path.relative(process.cwd(), filePath)
     const expectedUrl = filePathToUrlPath(relativePath)
 
     if (!expectedUrl) {
-      console.log(chalk.gray(`  ⏭️  Skipping: not a valid route file`))
+      if (!quiet) console.log(chalk.gray(`  ⏭️  Skipping: not a valid route file`))
       return
     }
 
@@ -153,18 +164,18 @@ function handleFileChange(filePath: string, apiDir: string): void {
     const result = synchronizeRouteFile(filePath, expectedUrl)
 
     if (result.error) {
-      console.log(chalk.red(`  ✗ Error: ${result.error}`))
+      if (!quiet) console.log(chalk.red(`  ✗ Error: ${result.error}`))
     } else if (result.modified) {
-      console.log(
+      if (!quiet) console.log(
         chalk.green(
           `  ✓ Updated: ${result.oldUrl || '(none)'} → ${result.newUrl}`,
         ),
       )
     } else {
-      console.log(chalk.gray(`  ✓ Already correct: ${result.newUrl}`))
+      if (!quiet) console.log(chalk.gray(`  ✓ Already correct: ${result.newUrl}`))
     }
   } catch (error) {
-    console.error(
+    if (!quiet) console.error(
       chalk.red(`  ✗ Error processing file:`),
       error instanceof Error ? error.message : error,
     )

@@ -14,6 +14,7 @@ export function parseCliArgs() {
         frozen: {type: 'boolean'},
         help: {type: 'boolean', short: 'h'},
         version: {type: 'boolean', short: 'v'},
+        quiet: {type: 'boolean', short: 'q'},
       },
       strict: true,
       allowPositionals: true,

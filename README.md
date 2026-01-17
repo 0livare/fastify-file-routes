@@ -26,6 +26,19 @@ The CLI will:
 2. Fix any URLs that don't match their file paths
 3. Watch for file changes and automatically update URLs
 
+### Options
+
+- `--help`, `-h`: Show help message
+- `--quiet`, `-q`: Suppress all output except initial notification that the tool is watching
+
+```bash
+# Run in quiet mode (minimal output)
+fastify-fbr --quiet
+
+# Or use the short flag
+fastify-fbr -q
+```
+
 ## How it works
 
 The tool follows file-based routing conventions to automatically generate URLs from file paths:
