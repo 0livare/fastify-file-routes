@@ -1236,12 +1236,14 @@ export default async function (fastify: FastifyInstance) {
       // Verify the file was scaffolded
       const content = fs.readFileSync(newFilePath, 'utf-8')
       expect(content).toContain("import type { FastifyInstance } from 'fastify'")
-      expect(content).toContain("import type { FastifyZodOpenApiTypeProvider }")
-      expect(content).toContain("import { z } from 'zod'")
       expect(content).toContain("method: 'GET'")
       expect(content).toContain("url: '/users'")
-      expect(content).toContain('withTypeProvider<FastifyZodOpenApiTypeProvider>()')
+      expect(content).toContain('fastify.route({')
       expect(content).toContain('async handler(req, reply)')
+      // Since fastify-type-provider-zod is not installed in this project,
+      // it should use the simple template
+      expect(content).not.toContain('FastifyZodOpenApiTypeProvider')
+      expect(content).not.toContain('zod')
 
       await watcher.close()
     })
