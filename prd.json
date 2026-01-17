@@ -1,0 +1,176 @@
+[
+  {
+    "category": "Test setup",
+    "description": "Setup vitest and testing environment for unit tests.",
+    "steps": [
+      "Install vitest and necessary testing libraries",
+      "Configure vitest in the project (vitest.config.ts)",
+      "Create a sample test file to verify setup",
+      "Add test script to package.json",
+      "Run initial test to confirm setup is working"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "Core Path Mapping",
+    "description": "Implement the core logic to convert file paths to URL paths following Tanstack Router conventions, handling parameters ($userId or .$userId), index files, and pathless layouts (_prefix). This is the foundation for all URL generation.",
+    "steps": [
+      "Create a function that converts file paths to URL paths (e.g., 'src/api/users/$userId.get.ts' → '/api/users/:userId')",
+      "Handle both $ and . syntax for route parameters (e.g., '$userId' and '.$userId' both become ':userId')",
+      "Handle index files (e.g., 'index.get.ts' maps to parent path)",
+      "Handle pathless layouts (files/folders starting with _ are excluded from URL path)",
+      "Strip the src/api prefix from all generated URLs",
+      "Write unit tests covering all path conversion scenarios (params, index, pathless, nested)",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "HTTP Method Extraction",
+    "description": "Extract the HTTP method (GET, POST, PUT, PATCH, DELETE) from the filename suffix and validate that only supported methods are used.",
+    "steps": [
+      "Create a function that extracts HTTP method from filename (e.g., '.get.ts' → 'GET')",
+      "Support standard REST methods: GET, POST, PUT, PATCH, DELETE",
+      "Support both .ts and .js file extensions",
+      "Return null/undefined for files without valid method suffixes",
+      "Write unit tests for all supported methods and edge cases",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "AST Parsing",
+    "description": "Parse Fastify route files using AST manipulation to locate the 'url' and 'method' fields within the route configuration object.",
+    "steps": [
+      "Install and configure a TypeScript/JavaScript AST parser (e.g., @babel/parser or typescript)",
+      "Create a function that parses a Fastify route file and locates the route() call",
+      "Extract the current 'url' field value from the route configuration object",
+      "Extract the current 'method' field value from the route configuration object",
+      "Handle different quote styles (single, double, template literals)",
+      "Write unit tests using example Fastify route files",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "AST Modification",
+    "description": "Modify the 'url' field in Fastify route files while preserving code formatting, comments, and structure.",
+    "steps": [
+      "Create a function that modifies the 'url' field in a parsed AST",
+      "Preserve original formatting, indentation, and quote style",
+      "Generate updated file content from modified AST",
+      "Add safety check: only modify files that have the expected Fastify route structure",
+      "Write unit tests that verify formatting preservation",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "File Discovery",
+    "description": "Scan the src/api directory to discover all Fastify route files based on naming conventions and extensions.",
+    "steps": [
+      "Create a function that recursively scans src/api directory",
+      "Filter files by extension (.ts, .js)",
+      "Filter files by HTTP method suffix (.get, .post, .put, .patch, .delete)",
+      "Return array of file paths with metadata (path, method, calculated URL)",
+      "Non-goal: Do not scan files outside src/api directory",
+      "Write unit tests using mock file structures",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "Conflict Detection",
+    "description": "Detect when multiple files would map to the same URL and resolve conflicts by generating unique URLs with numeric suffixes.",
+    "steps": [
+      "Create a function that detects route conflicts (multiple files → same URL)",
+      "Generate unique URLs for conflicts by appending suffixes (e.g., /users/:id, /users/:id-2, /users/:id-3)",
+      "Log warnings to console when conflicts are detected and resolved",
+      "Return a map of file paths to their final unique URLs",
+      "Write unit tests for various conflict scenarios",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "File Watching",
+    "description": "Set up file system watching for the src/api directory to detect changes, additions, deletions, and renames in real-time.",
+    "steps": [
+      "Install and configure a file watcher library (e.g., chokidar)",
+      "Watch src/api directory recursively for .ts and .js files",
+      "Detect file additions, modifications, and deletions",
+      "Trigger route synchronization callback on file system events",
+      "Handle graceful cleanup of watcher on process exit",
+      "Non-goal: Do not watch files outside src/api directory",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "Route Synchronization",
+    "description": "Synchronize the 'url' field in Fastify route files to match the calculated URL from the file path, updating files automatically when they don't match.",
+    "steps": [
+      "Create a function that compares actual URL in file vs expected URL from path",
+      "If URLs differ, update the file using AST modification",
+      "Log each change made (file path, old URL, new URL)",
+      "Skip files that already have correct URLs",
+      "Handle errors gracefully (log and continue for other files)",
+      "Write unit tests that verify synchronization logic",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "Initial Scan",
+    "description": "On CLI startup, scan all existing route files and automatically fix any URLs that don't match their file paths, then print a summary.",
+    "steps": [
+      "Discover all route files in src/api on startup",
+      "Calculate expected URLs and detect conflicts",
+      "Update all files with incorrect URLs",
+      "Print summary: total files scanned, files updated, conflicts resolved",
+      "Non-goal: Do not prompt for confirmation (auto-fix per requirements)",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "CLI Interface",
+    "description": "Create the CLI entry point with a 'watch' command that initializes the file watcher and runs indefinitely, handling graceful shutdown.",
+    "steps": [
+      "Create CLI entry point with watch command (e.g., 'fastify-fbr watch')",
+      "Set up argument parsing if needed (use zero config defaults)",
+      "Initialize file watcher and initial scan",
+      "Keep process running until interrupted (SIGINT/SIGTERM)",
+      "Handle graceful shutdown (cleanup watcher, log exit message)",
+      "Add helpful console output (startup message, watching indicator)",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "Integration Testing",
+    "description": "Create end-to-end tests with real Fastify route files to verify the complete flow from file discovery through watching and modification.",
+    "steps": [
+      "Create test fixtures directory with example Fastify route files",
+      "Test full flow: discover files → parse → calculate URLs → modify files → verify changes",
+      "Test conflict resolution with multiple files mapping to same URL",
+      "Test file watcher responds to file additions and modifications",
+      "Test that modified files remain valid TypeScript/JavaScript",
+      "Verify changes work by importing and validating the modified files",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  }
+]
