@@ -150,3 +150,43 @@
 - Real-world examples (typical Fastify files, TypeScript with type providers)
 
 ---
+
+## File Discovery (Complete)
+
+**Date:** 2026-01-16
+
+**Summary:**
+- Created src/file-discovery.ts with discoverRouteFiles function
+- Implemented recursive directory scanning for src/api directory
+- Filters files by extension (.ts, .js) and HTTP method suffix
+- Returns array of RouteFileMetadata with filePath, method, and calculated URL
+- Properly handles path resolution: converts absolute paths to relative paths for URL calculation
+- Uses filePathToUrlPath to calculate URLs based on file location
+- Uses extractHttpMethod to extract HTTP methods from filenames
+- Created comprehensive test suite with 26 tests covering all scenarios
+- All tests pass (137/137 total across all test files)
+- All checks pass: typecheck, test, and lint
+
+**Key Decisions:**
+- Uses fs.readdirSync with withFileTypes for efficient directory traversal
+- Returns absolute file paths for easy file system operations downstream
+- Converts paths to relative format before passing to filePathToUrlPath for correct URL calculation
+- Non-goal explicitly enforced: only scans within provided apiDir, no external scanning
+- Function accepts apiDir parameter with default 'src/api' for flexibility
+- Returns empty array if directory doesn't exist (graceful handling)
+
+**Files Created:**
+- src/file-discovery.ts (89 lines)
+- src/__tests__/file-discovery.test.ts (392 lines, 26 tests)
+
+**Testing Coverage:**
+- Basic discovery (empty dir, single file, multiple files)
+- File extension filtering (.ts, .js, ignoring others)
+- HTTP method filtering (all supported methods, ignoring invalid)
+- Recursive directory scanning (nested, deeply nested, empty subdirs)
+- URL path calculation (basic, nested, index files, pathless layouts)
+- Route file metadata structure validation
+- Complex scenarios (realistic API structure, mixed extensions, multiple methods per route)
+- Edge cases (non-route files, dots in directory names, multiple dots in filenames)
+
+---
