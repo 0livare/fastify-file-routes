@@ -83,6 +83,18 @@ async function main() {
 }
 
 /**
+ * Check if a directory contains an index file (index.ts or index.js without method suffix)
+ */
+function hasIndexFile(dir: string): boolean {
+  try {
+    const entries = fs.readdirSync(dir)
+    return entries.includes('index.ts') || entries.includes('index.js')
+  } catch {
+    return false
+  }
+}
+
+/**
  * Handle file addition or change by synchronizing the route
  */
 function handleFileChange(
@@ -92,6 +104,22 @@ function handleFileChange(
   isNewFile: boolean = false,
 ): void {
   try {
+    // Check if this file is in a directory with an index file
+    const dir = path.dirname(filePath)
+    const fileName = path.basename(filePath)
+    const isIndexFile = fileName === 'index.ts' || fileName === 'index.js'
+
+    if (!isIndexFile && hasIndexFile(dir)) {
+      if (verbose) {
+        console.log(
+          chalk.yellow(
+            `  ⚠️  Skipping: directory contains an index file (this file will be ignored by Fastify)`,
+          ),
+        )
+      }
+      return
+    }
+
     // Calculate the expected URL for this file
     const relativePath = path.relative(process.cwd(), filePath)
     const expectedUrl = filePathToUrlPath(relativePath)

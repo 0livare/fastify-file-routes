@@ -66,10 +66,12 @@ export default async function (fastify: FastifyInstance) {
 `
 
       // Create directory structure
+      // Note: Cannot have both index and $userId in same directory - index takes precedence
       fs.mkdirSync(path.join(testDir, 'users'), {recursive: true})
+      fs.mkdirSync(path.join(testDir, 'users/$userId'), {recursive: true})
       fs.writeFileSync(path.join(testDir, 'users/index.get.ts'), usersContent)
       fs.writeFileSync(
-        path.join(testDir, 'users/$userId.get.ts'),
+        path.join(testDir, 'users/$userId/index.get.ts'),
         userIdContent,
       )
 
@@ -84,7 +86,7 @@ export default async function (fastify: FastifyInstance) {
 
       // Verify files were actually modified
       const usersFile = path.join(testDir, 'users/index.get.ts')
-      const userIdFile = path.join(testDir, 'users/$userId.get.ts')
+      const userIdFile = path.join(testDir, 'users/$userId/index.get.ts')
 
       const updatedUsersContent = fs.readFileSync(usersFile, 'utf-8')
       const updatedUserIdContent = fs.readFileSync(userIdFile, 'utf-8')
@@ -636,6 +638,7 @@ export default async function (fastify: FastifyInstance) {
       // Create directory structure
       fs.mkdirSync(path.join(testDir, 'auth'), {recursive: true})
       fs.mkdirSync(path.join(testDir, 'users'), {recursive: true})
+      fs.mkdirSync(path.join(testDir, 'users/$userId'), {recursive: true})
       fs.mkdirSync(path.join(testDir, 'products'), {recursive: true})
 
       fs.writeFileSync(
@@ -646,8 +649,9 @@ export default async function (fastify: FastifyInstance) {
         path.join(testDir, 'users/index.get.ts'),
         usersListContent,
       )
+      // Move $userId to subdirectory to avoid conflict with index
       fs.writeFileSync(
-        path.join(testDir, 'users/$userId.get.ts'),
+        path.join(testDir, 'users/$userId/index.get.ts'),
         userDetailContent,
       )
       fs.writeFileSync(
@@ -675,7 +679,12 @@ export default async function (fastify: FastifyInstance) {
       ).toContain("url: '/users'")
 
       expect(
-        fs.readFileSync(path.join(testDir, 'users/$userId.get.ts'), 'utf-8'),
+        fs
+          .readFileSync(
+            path.join(testDir, 'users/$userId/index.get.ts'),
+            'utf-8',
+          )
+          .replace(/\s+/g, ' '),
       ).toContain("url: '/users/:userId'")
 
       // Products should have conflict resolution applied
@@ -1194,6 +1203,16 @@ export default async function (fastify: FastifyInstance) {
   })
 
   describe('File Scaffolding (New Empty Files)', () => {
+    // Helper function to check if directory has index file
+    function hasIndexFile(dir: string): boolean {
+      try {
+        const entries = fs.readdirSync(dir)
+        return entries.includes('index.ts') || entries.includes('index.js')
+      } catch {
+        return false
+      }
+    }
+
     // Helper function to create a watcher that scaffolds empty files
     function createScaffoldingWatcher(testDir: string) {
       const {generateRouteTemplate} = require('../route-template')
@@ -1202,6 +1221,16 @@ export default async function (fastify: FastifyInstance) {
 
       const onEvent = vi.fn((event: WatchEvent) => {
         if (event.type === 'add') {
+          // Check if this file is in a directory with an index file
+          const dir = path.dirname(event.filePath)
+          const fileName = path.basename(event.filePath)
+          const isIndexFile = fileName === 'index.ts' || fileName === 'index.js'
+
+          if (!isIndexFile && hasIndexFile(dir)) {
+            // Skip scaffolding files in directories with index files
+            return
+          }
+
           // Check if file is empty and scaffold it
           const fileContent = fs.readFileSync(event.filePath, 'utf-8').trim()
           if (fileContent === '') {
@@ -1390,6 +1419,119 @@ export default async function (fastify) {
       const content = fs.readFileSync(newFilePath, 'utf-8')
       expect(content).toContain('FastifyInstance')
       expect(content).toContain("method: 'GET'")
+
+      await watcher.close()
+    })
+
+    it('should NOT scaffold empty files in directories with index.ts', async () => {
+      const watcher = createScaffoldingWatcher(testDir)
+      await delay(200)
+
+      // Create index.ts (plugin file without method suffix)
+      const docsDir = path.join(testDir, 'docs')
+      fs.mkdirSync(docsDir, {recursive: true})
+      const indexPath = path.join(docsDir, 'index.ts')
+      fs.writeFileSync(
+        indexPath,
+        `export default async function (fastify) { /* plugin */ }`,
+        'utf-8',
+      )
+
+      await delay(400)
+
+      // Now create an empty sibling file
+      const siblingPath = path.join(docsDir, 'about.get.ts')
+      fs.writeFileSync(siblingPath, '', 'utf-8')
+
+      await delay(400)
+
+      // The sibling file should remain empty (not scaffolded)
+      const content = fs.readFileSync(siblingPath, 'utf-8')
+      expect(content).toBe('')
+      expect(content).not.toContain('FastifyInstance')
+      expect(content).not.toContain('fastify.route')
+
+      await watcher.close()
+    })
+
+    it('should NOT scaffold empty files in directories with index.js', async () => {
+      const watcher = createScaffoldingWatcher(testDir)
+      await delay(200)
+
+      // Create index.js (plugin file without method suffix)
+      const apiDir = path.join(testDir, 'api')
+      fs.mkdirSync(apiDir, {recursive: true})
+      const indexPath = path.join(apiDir, 'index.js')
+      fs.writeFileSync(
+        indexPath,
+        `export default async function (fastify) { /* plugin */ }`,
+        'utf-8',
+      )
+
+      await delay(400)
+
+      // Now create an empty sibling file
+      const siblingPath = path.join(apiDir, 'users.get.ts')
+      fs.writeFileSync(siblingPath, '', 'utf-8')
+
+      await delay(400)
+
+      // The sibling file should remain empty (not scaffolded)
+      const content = fs.readFileSync(siblingPath, 'utf-8')
+      expect(content).toBe('')
+
+      await watcher.close()
+    })
+
+    it('should scaffold index.get.ts even when it is empty (not blocking)', async () => {
+      const watcher = createScaffoldingWatcher(testDir)
+      await delay(200)
+
+      // Create an empty index.get.ts file (has method suffix)
+      const docsDir = path.join(testDir, 'docs')
+      fs.mkdirSync(docsDir, {recursive: true})
+      const indexGetPath = path.join(docsDir, 'index.get.ts')
+      fs.writeFileSync(indexGetPath, '', 'utf-8')
+
+      await delay(400)
+
+      // index.get.ts should be scaffolded (it's a route file, not a plugin)
+      const content = fs.readFileSync(indexGetPath, 'utf-8')
+      expect(content).toContain('FastifyInstance')
+      expect(content).toContain("method: 'GET'")
+      expect(content).toContain("url: '/docs'")
+
+      await watcher.close()
+    })
+
+    it('should scaffold files in subdirectories even when parent has index.ts', async () => {
+      const watcher = createScaffoldingWatcher(testDir)
+      await delay(200)
+
+      // Create index.ts in parent directory
+      const docsDir = path.join(testDir, 'docs')
+      fs.mkdirSync(docsDir, {recursive: true})
+      fs.writeFileSync(
+        path.join(docsDir, 'index.ts'),
+        `export default async function (fastify) {}`,
+        'utf-8',
+      )
+
+      await delay(400)
+
+      // Create empty file in subdirectory
+      const apiDir = path.join(docsDir, 'api')
+      fs.mkdirSync(apiDir, {recursive: true})
+      const apiUsersPath = path.join(apiDir, 'users.get.ts')
+      fs.writeFileSync(apiUsersPath, '', 'utf-8')
+
+      await delay(400)
+
+      // The subdirectory file should be scaffolded (parent index.ts doesn't affect it)
+      const content = fs.readFileSync(apiUsersPath, 'utf-8')
+      expect(content).toContain('FastifyInstance')
+      expect(content).toContain("method: 'GET'")
+      expect(content).toContain("url: '/docs/api/users'")
 
       await watcher.close()
     })

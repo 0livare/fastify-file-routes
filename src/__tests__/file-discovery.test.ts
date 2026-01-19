@@ -38,15 +38,19 @@ describe('discoverRouteFiles', () => {
   })
 
   describe('Basic Discovery', () => {
-    it('should return empty array when directory does not exist', () => {
-      const results = discoverRouteFiles(path.join(testDir, 'nonexistent'))
-      expect(results).toEqual([])
+    it('should return empty result when directory does not exist', () => {
+      const {routes, invalidFiles} = discoverRouteFiles(
+        path.join(testDir, 'nonexistent'),
+      )
+      expect(routes).toEqual([])
+      expect(invalidFiles).toEqual([])
     })
 
-    it('should return empty array when directory is empty', () => {
+    it('should return empty result when directory is empty', () => {
       fs.mkdirSync(testDir, {recursive: true})
-      const results = discoverRouteFiles(testDir)
-      expect(results).toEqual([])
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toEqual([])
+      expect(invalidFiles).toEqual([])
     })
 
     it('should discover a single route file', () => {
@@ -54,9 +58,10 @@ describe('discoverRouteFiles', () => {
         'users.get.ts': 'export default function() {}',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(1)
-      expect(results[0]).toMatchObject({
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1)
+      expect(invalidFiles).toHaveLength(0)
+      expect(routes[0]).toMatchObject({
         filePath: path.join(testDir, 'users.get.ts'),
         method: 'GET',
         url: '/users',
@@ -70,10 +75,10 @@ describe('discoverRouteFiles', () => {
         'users.delete.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(3)
+      const {routes} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(3)
 
-      const methods = results.map((r) => r.method).sort()
+      const methods = routes.map((r) => r.method).sort()
       expect(methods).toEqual(['DELETE', 'GET', 'POST'])
     })
   })
@@ -84,9 +89,9 @@ describe('discoverRouteFiles', () => {
         'users.get.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(1)
-      expect(results[0].filePath).toContain('.ts')
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1)
+      expect(routes[0].filePath).toContain('.ts')
     })
 
     it('should discover .js files', () => {
@@ -94,9 +99,9 @@ describe('discoverRouteFiles', () => {
         'users.get.js': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(1)
-      expect(results[0].filePath).toContain('.js')
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1)
+      expect(routes[0].filePath).toContain('.js')
     })
 
     it('should ignore files without .ts or .js extension', () => {
@@ -107,9 +112,9 @@ describe('discoverRouteFiles', () => {
         'styles.css': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(1)
-      expect(results[0].filePath).toContain('users.get.ts')
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1)
+      expect(routes[0].filePath).toContain('users.get.ts')
     })
   })
 
@@ -123,10 +128,10 @@ describe('discoverRouteFiles', () => {
         'users.delete.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(5)
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(5)
 
-      const methods = results.map((r) => r.method).sort()
+      const methods = routes.map((r) => r.method).sort()
       expect(methods).toEqual(['DELETE', 'GET', 'PATCH', 'POST', 'PUT'])
     })
 
@@ -138,9 +143,9 @@ describe('discoverRouteFiles', () => {
         'utils.ts': '', // No method
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(1)
-      expect(results[0].filePath).toContain('users.get.ts')
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1)
+      expect(routes[0].filePath).toContain('users.get.ts')
     })
 
     it('should ignore files with invalid HTTP methods', () => {
@@ -151,9 +156,9 @@ describe('discoverRouteFiles', () => {
         'users.trace.ts': '', // TRACE not supported
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(1)
-      expect(results[0].filePath).toContain('users.get.ts')
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1)
+      expect(routes[0].filePath).toContain('users.get.ts')
     })
   })
 
@@ -162,13 +167,13 @@ describe('discoverRouteFiles', () => {
       createTestStructure({
         'users.get.ts': '',
         'posts/index.get.ts': '',
-        'posts/comments.get.ts': '',
+        'posts/comments.get.ts': '', // Valid - index.get.ts doesn't block siblings
         'admin/users.get.ts': '',
         'admin/settings/general.get.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(5)
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(5) // All files are valid
     })
 
     it('should handle deeply nested directory structures', () => {
@@ -176,9 +181,9 @@ describe('discoverRouteFiles', () => {
         'a/b/c/d/e/f.get.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(1)
-      expect(results[0].url).toBe('/a/b/c/d/e/f')
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1)
+      expect(routes[0].url).toBe('/a/b/c/d/e/f')
     })
 
     it('should handle empty subdirectories', () => {
@@ -187,9 +192,9 @@ describe('discoverRouteFiles', () => {
         'empty/.gitkeep': '', // Empty directory with gitkeep
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(1)
-      expect(results[0].filePath).toContain('users.get.ts')
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1)
+      expect(routes[0].filePath).toContain('users.get.ts')
     })
   })
 
@@ -201,8 +206,8 @@ describe('discoverRouteFiles', () => {
         'comments.get.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      const urls = results.map((r) => r.url).sort()
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      const urls = routes.map((r) => r.url).sort()
       expect(urls).toEqual(['/comments', '/posts', '/users'])
     })
 
@@ -213,8 +218,8 @@ describe('discoverRouteFiles', () => {
         'users/$id/posts/$postId.get.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      const urls = results.map((r) => r.url).sort()
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      const urls = routes.map((r) => r.url).sort()
       expect(urls).toEqual([
         '/users/:id',
         '/users/:id/posts',
@@ -229,8 +234,8 @@ describe('discoverRouteFiles', () => {
         'users/$id/index.get.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      const urls = results.map((r) => r.url).sort()
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      const urls = routes.map((r) => r.url).sort()
       expect(urls).toEqual(['/', '/users', '/users/:id'])
     })
 
@@ -240,8 +245,8 @@ describe('discoverRouteFiles', () => {
         'users/_protected/$id.get.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      const urls = results.map((r) => r.url).sort()
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      const urls = routes.map((r) => r.url).sort()
       expect(urls).toEqual(['/users', '/users/:id'])
     })
   })
@@ -252,10 +257,10 @@ describe('discoverRouteFiles', () => {
         'users/$id.get.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(1)
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1)
 
-      const metadata = results[0]
+      const metadata = routes[0]
       expect(metadata).toHaveProperty('filePath')
       expect(metadata).toHaveProperty('method')
       expect(metadata).toHaveProperty('url')
@@ -269,8 +274,8 @@ describe('discoverRouteFiles', () => {
         'users.get.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results[0].filePath).toBe(path.join(testDir, 'users.get.ts'))
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes[0].filePath).toBe(path.join(testDir, 'users.get.ts'))
     })
 
     it('should preserve method case (uppercase)', () => {
@@ -280,8 +285,8 @@ describe('discoverRouteFiles', () => {
         'users.PUT.ts': '', // Mixed case in filename
       })
 
-      const results = discoverRouteFiles(testDir)
-      const methods = results.map((r) => r.method)
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      const methods = routes.map((r) => r.method)
 
       // All methods should be uppercase
       expect(methods.every((m) => m === m.toUpperCase())).toBe(true)
@@ -292,30 +297,31 @@ describe('discoverRouteFiles', () => {
     it('should handle realistic API structure', () => {
       createTestStructure({
         'index.get.ts': '',
-        'health.get.ts': '',
+        'health.get.ts': '', // Valid - index.get.ts doesn't block siblings
         'users/index.get.ts': '',
         'users/index.post.ts': '',
-        'users/$id.get.ts': '',
+        'users/$id.get.ts': '', // Valid - index.get.ts doesn't block siblings
         'users/$id.put.ts': '',
         'users/$id.delete.ts': '',
         'users/$id/posts.get.ts': '',
         'users/$id/posts.post.ts': '',
         'posts/index.get.ts': '',
-        'posts/$postId.get.ts': '',
+        'posts/$postId.get.ts': '', // Valid - index.get.ts doesn't block siblings
         'posts/$postId/comments.get.ts': '',
         '_auth/login.post.ts': '',
         '_auth/logout.post.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results.length).toBeGreaterThan(0)
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes.length).toBeGreaterThan(0)
 
       // Verify some key routes
-      const urls = results.map((r) => r.url)
+      const urls = routes.map((r) => r.url)
       expect(urls).toContain('/')
       expect(urls).toContain('/health')
       expect(urls).toContain('/users')
-      expect(urls).toContain('/users/:id')
+      expect(urls).toContain('/users/:id') // Valid now
+      expect(urls).toContain('/users/:id/posts')
       expect(urls).toContain('/login') // _auth is pathless
       expect(urls).toContain('/logout')
     })
@@ -328,10 +334,10 @@ describe('discoverRouteFiles', () => {
         'likes.delete.js': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(4)
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(4)
 
-      const extensions = results.map((r) => path.extname(r.filePath)).sort()
+      const extensions = routes.map((r) => path.extname(r.filePath)).sort()
       expect(extensions.filter((e) => e === '.ts')).toHaveLength(2)
       expect(extensions.filter((e) => e === '.js')).toHaveLength(2)
     })
@@ -344,15 +350,15 @@ describe('discoverRouteFiles', () => {
         'users/$id.delete.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(4)
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(4)
 
       // All should map to same URL but different methods
-      const urls = new Set(results.map((r) => r.url))
+      const urls = new Set(routes.map((r) => r.url))
       expect(urls.size).toBe(1)
       expect(urls.has('/users/:id')).toBe(true)
 
-      const methods = results.map((r) => r.method).sort()
+      const methods = routes.map((r) => r.method).sort()
       expect(methods).toEqual(['DELETE', 'GET', 'PATCH', 'PUT'])
     })
   })
@@ -366,8 +372,8 @@ describe('discoverRouteFiles', () => {
         'config.json': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toEqual([])
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toEqual([])
     })
 
     it('should handle files with dots in directory names', () => {
@@ -376,9 +382,9 @@ describe('discoverRouteFiles', () => {
         'v2.0/users.get.ts': '',
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(2)
-      expect(results.map((r) => r.url).sort()).toEqual([
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(2)
+      expect(routes.map((r) => r.url).sort()).toEqual([
         '/v1.0/users',
         '/v2.0/users',
       ])
@@ -389,8 +395,149 @@ describe('discoverRouteFiles', () => {
         'users.admin.get.ts': '', // Only last .get.ts matters
       })
 
-      const results = discoverRouteFiles(testDir)
-      expect(results).toHaveLength(1)
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1)
+    })
+  })
+
+  describe('index file behavior (Fastify autoload)', () => {
+    it('should ignore sibling route files when index.ts exists', () => {
+      createTestStructure({
+        'docs/index.ts': '// plugin file',
+        'docs/about.get.ts': '',
+        'docs/faq.get.ts': '',
+      })
+
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(0) // index.ts is not a route file
+      expect(invalidFiles).toHaveLength(2) // about and faq are invalid
+    })
+
+    it('should allow index.get.ts to coexist with other route files', () => {
+      createTestStructure({
+        'docs/index.get.ts': '',
+        'docs/about.get.ts': '',
+        'docs/faq.post.ts': '',
+      })
+
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(3) // All are valid
+      expect(invalidFiles).toHaveLength(0)
+    })
+
+    it('should allow subdirectories to have routes when parent has index.ts', () => {
+      createTestStructure({
+        'docs/index.ts': '// plugin',
+        'docs/about.get.ts': '', // Should be ignored
+        'docs/api/users.get.ts': '', // Should be discovered
+        'docs/api/posts.get.ts': '', // Should be discovered
+      })
+
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(2) // Only subdirectory files
+
+      const urls = routes.map((r) => r.url).sort()
+      expect(urls).toEqual(['/docs/api/posts', '/docs/api/users'])
+      expect(invalidFiles).toHaveLength(1) // about.get.ts is invalid
+    })
+
+    it('should handle nested index.ts files independently', () => {
+      createTestStructure({
+        'docs/index.ts': '// plugin',
+        'docs/guide/index.ts': '// plugin',
+        'docs/about.get.ts': '', // Ignored (sibling of docs/index.ts)
+        'docs/guide/intro.get.ts': '', // Ignored (sibling of docs/guide/index.ts)
+        'docs/api/users.get.ts': '', // Discovered (subdirectory of docs)
+      })
+
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1) // Only api/users
+
+      const urls = routes.map((r) => r.url).sort()
+      expect(urls).toEqual(['/docs/api/users'])
+      expect(invalidFiles).toHaveLength(2) // about and intro
+    })
+
+    it('should not affect directories without index.ts', () => {
+      createTestStructure({
+        'docs/index.ts': '// plugin',
+        'docs/about.get.ts': '', // Ignored
+        'api/users.get.ts': '', // Discovered (no index.ts in api/)
+        'api/posts.get.ts': '', // Discovered
+      })
+
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(2) // Only api files
+
+      const urls = routes.map((r) => r.url).sort()
+      expect(urls).toEqual(['/api/posts', '/api/users'])
+      expect(invalidFiles).toHaveLength(1) // about
+    })
+
+    it('should work with index.js files', () => {
+      createTestStructure({
+        'docs/index.js': '// plugin',
+        'docs/about.get.js': '', // Should be ignored
+        'docs/api/users.get.js': '', // Should be discovered
+      })
+
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1)
+
+      const urls = routes.map((r) => r.url).sort()
+      expect(urls).toEqual(['/docs/api/users'])
+      expect(invalidFiles).toHaveLength(1)
+    })
+
+    it('should report invalid sibling files when index.ts exists', () => {
+      createTestStructure({
+        'docs/index.ts': '// plugin',
+        'docs/about.get.ts': '', // Invalid
+        'docs/faq.get.ts': '', // Invalid
+        'docs/api/users.get.ts': '', // Valid (subdirectory)
+      })
+
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1) // Only api/users
+      expect(invalidFiles).toHaveLength(2) // about and faq
+
+      const invalidPaths = invalidFiles.map((f) => path.basename(f.filePath))
+      expect(invalidPaths).toContain('about.get.ts')
+      expect(invalidPaths).toContain('faq.get.ts')
+
+      // Check that all invalid files have a reason
+      invalidFiles.forEach((invalid) => {
+        expect(invalid.reason).toContain('Sibling routes are not allowed')
+        expect(invalid.reason).toContain('index file')
+        expect(invalid.reason).toContain('Fastify autoload')
+      })
+    })
+
+    it('should not treat index.get.ts/index.post.ts as special', () => {
+      createTestStructure({
+        'docs/index.get.ts': '',
+        'docs/index.post.ts': '',
+        'docs/about.get.ts': '',
+      })
+
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(3) // All three are valid route files
+      expect(invalidFiles).toHaveLength(0)
+    })
+
+    it('should report invalid files in multiple directories independently', () => {
+      createTestStructure({
+        'docs/index.ts': '// plugin',
+        'docs/about.get.ts': '', // Invalid
+        'api/users.get.ts': '', // Valid (no index.ts in api/)
+        'blog/index.ts': '// plugin',
+        'blog/post1.get.ts': '', // Invalid
+        'blog/post2.get.ts': '', // Invalid
+      })
+
+      const {routes, invalidFiles} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(1) // Only api/users
+      expect(invalidFiles).toHaveLength(3) // docs/about, blog/post1, blog/post2
     })
   })
 })

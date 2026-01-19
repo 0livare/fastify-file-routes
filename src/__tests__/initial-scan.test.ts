@@ -492,6 +492,163 @@ export default async function (fastify: FastifyInstance) {
     })
   })
 
+  describe('index file behavior', () => {
+    it('should NOT modify files that are siblings of index.ts', () => {
+      // Create index.ts (plugin file - no method suffix)
+      const indexContent = `
+import type { FastifyInstance } from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  // Plugin setup code
+}
+`
+
+      // Create a sibling route file with wrong URL
+      const siblingContent = `
+import type { FastifyInstance } from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/wrong',
+    method: 'GET',
+    handler: async (request, reply) => {
+      return { data: {} }
+    }
+  })
+}
+`
+
+      fs.mkdirSync(path.join(testDir, 'docs'), {recursive: true})
+      const indexPath = path.join(testDir, 'docs/index.ts')
+      const siblingPath = path.join(testDir, 'docs/about.get.ts')
+
+      fs.writeFileSync(indexPath, indexContent)
+      fs.writeFileSync(siblingPath, siblingContent)
+
+      const result = performInitialScan(testDir)
+
+      // index.ts is not a route file (no method suffix), so totalFiles should be 0
+      expect(result.totalFiles).toBe(0)
+      expect(result.filesUpdated).toBe(0)
+      expect(result.filesSkipped).toBe(0)
+
+      // Verify sibling file was NOT modified
+      const unchangedContent = fs.readFileSync(siblingPath, 'utf-8')
+      expect(unchangedContent).toBe(siblingContent) // Should be identical
+      expect(unchangedContent).toContain("url: '/wrong'") // Still has wrong URL
+    })
+
+    it('should NOT modify multiple siblings of index.ts', () => {
+      const indexContent = `
+import type { FastifyInstance } from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  // Plugin setup
+}
+`
+
+      const siblingContent1 = `
+import type { FastifyInstance } from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/wrong1',
+    method: 'GET',
+    handler: async (request, reply) => {
+      return { data: {} }
+    }
+  })
+}
+`
+
+      const siblingContent2 = `
+import type { FastifyInstance } from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/wrong2',
+    method: 'POST',
+    handler: async (request, reply) => {
+      return { data: {} }
+    }
+  })
+}
+`
+
+      fs.mkdirSync(path.join(testDir, 'docs'), {recursive: true})
+      const indexPath = path.join(testDir, 'docs/index.ts')
+      const sibling1Path = path.join(testDir, 'docs/about.get.ts')
+      const sibling2Path = path.join(testDir, 'docs/faq.post.ts')
+
+      fs.writeFileSync(indexPath, indexContent)
+      fs.writeFileSync(sibling1Path, siblingContent1)
+      fs.writeFileSync(sibling2Path, siblingContent2)
+
+      const result = performInitialScan(testDir)
+
+      expect(result.totalFiles).toBe(0)
+      expect(result.filesUpdated).toBe(0)
+
+      // Verify neither sibling was modified
+      const unchanged1 = fs.readFileSync(sibling1Path, 'utf-8')
+      expect(unchanged1).toBe(siblingContent1)
+      expect(unchanged1).toContain("url: '/wrong1'")
+
+      const unchanged2 = fs.readFileSync(sibling2Path, 'utf-8')
+      expect(unchanged2).toBe(siblingContent2)
+      expect(unchanged2).toContain("url: '/wrong2'")
+    })
+
+    it('should allow index.get.ts to coexist and be updated like other routes', () => {
+      const routeContent1 = `
+import type { FastifyInstance } from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/wrong1',
+    method: 'GET',
+    handler: async (request, reply) => {
+      return { data: {} }
+    }
+  })
+}
+`
+
+      const routeContent2 = `
+import type { FastifyInstance } from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/wrong2',
+    method: 'POST',
+    handler: async (request, reply) => {
+      return { data: {} }
+    }
+  })
+}
+`
+
+      fs.mkdirSync(path.join(testDir, 'docs'), {recursive: true})
+      const route1Path = path.join(testDir, 'docs/index.get.ts')
+      const route2Path = path.join(testDir, 'docs/about.post.ts')
+
+      fs.writeFileSync(route1Path, routeContent1)
+      fs.writeFileSync(route2Path, routeContent2)
+
+      const result = performInitialScan(testDir)
+
+      expect(result.totalFiles).toBe(2)
+      expect(result.filesUpdated).toBe(2)
+
+      // Verify both files were updated correctly
+      const updated1 = fs.readFileSync(route1Path, 'utf-8')
+      expect(updated1).toContain("url: '/docs'")
+
+      const updated2 = fs.readFileSync(route2Path, 'utf-8')
+      expect(updated2).toContain("url: '/docs/about'")
+    })
+  })
+
   describe('quote style preservation', () => {
     it('should preserve double quotes', () => {
       const fileContent = `

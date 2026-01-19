@@ -39,8 +39,17 @@ export function performInitialScan(
   console.log('🔍 Scanning route files...')
 
   // Step 1: Discover all route files
-  const routes = discoverRouteFiles(apiDir)
+  const {routes, invalidFiles} = discoverRouteFiles(apiDir)
   console.log(`   Found ${routes.length} route file(s)`)
+
+  // Report invalid files
+  if (invalidFiles.length > 0) {
+    console.log(`⚠️  Warning: Found ${invalidFiles.length} invalid route file(s):`)
+    for (const invalid of invalidFiles) {
+      console.log(`   ✗ ${invalid.filePath}`)
+      console.log(`     ${invalid.reason}`)
+    }
+  }
 
   // Handle empty directory
   if (routes.length === 0) {
@@ -61,9 +70,15 @@ export function performInitialScan(
     }
   }
 
-  // Step 2: Detect and resolve conflicts
+  // Step 2: Filter out invalid files from synchronization
+  // Invalid files (e.g., siblings of index.ts) should not be updated
+  const invalidFilePaths = new Set(invalidFiles.map((f) => f.filePath))
+  const validRoutes = routes.filter((r) => !invalidFilePaths.has(r.filePath))
+
+  // Step 3: Detect and resolve conflicts
   console.log('🔍 Detecting conflicts...')
-  const {fileUrlMap, fileRouteMap, conflicts} = detectAndResolveConflicts(routes)
+  const {fileUrlMap, fileRouteMap, conflicts} =
+    detectAndResolveConflicts(validRoutes)
 
   if (conflicts.length === 0) {
     console.log('   No conflicts detected')
@@ -71,15 +86,19 @@ export function performInitialScan(
     console.log(`   Resolved ${conflicts.length} conflict(s)`)
   }
 
-  // Step 3: Synchronize all files
+  // Step 4: Synchronize all valid files (excluding invalid files)
   console.log('🔄 Synchronizing route files...')
   const syncSummary = synchronizeRoutes(fileUrlMap, fileRouteMap)
 
-  // Step 4: Print summary
+  // Step 5: Print summary
   console.log('\n📊 Summary:')
-  console.log(`   Total files scanned: ${syncSummary.totalFiles}`)
+  console.log(`   Total files scanned: ${routes.length}`)
+  console.log(`   Valid files synchronized: ${syncSummary.totalFiles}`)
   console.log(`   Files updated: ${syncSummary.filesModified}`)
   console.log(`   Files skipped (already correct): ${syncSummary.filesSkipped}`)
+  if (invalidFiles.length > 0) {
+    console.log(`   Invalid files (not synchronized): ${invalidFiles.length}`)
+  }
   console.log(`   Conflicts resolved: ${conflicts.length}`)
   if (syncSummary.errors > 0) {
     console.log(`   Errors: ${syncSummary.errors}`)
