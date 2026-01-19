@@ -1,0 +1,73 @@
+[
+  {
+    "category": "Bug Fix",
+    "description": "Fix pathless layout bug where file URLs incorrectly include parent directory name. Currently `src/api/examples/foobar.$count.get.ts` generates `/examples/foobar/:count` when it should generate `/foobar/:count` (autoload handles the parent directory path).",
+    "steps": [
+      "Identify root cause in src/path-mapper.ts for why parent directory is included in URL generation",
+      "Update filePathToUrlPath() function to correctly exclude parent directory from URL when file is not an index file",
+      "Add test case for `src/api/examples/foobar.$count.get.ts` expecting `/foobar/:count` (not `/examples/foobar/:count`)",
+      "Add test cases for similar nested file scenarios to prevent regression",
+      "Verify changes work correctly by running existing tests",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "CLI Flag: --root / -r",
+    "description": "Add --root/-r flag to specify the root server file for reading route prefix. When not provided, default to checking: (1) src/server, (2) src/main, (3) src/index in that order.",
+    "steps": [
+      "Add --root/-r flag to CLI argument parser in src/cli.ts with type: 'string'",
+      "Create new module src/root-file-finder.ts with function findRootServerFile(customPath?: string) that implements the fallback logic",
+      "Implement validation for specified root file: check existence and readability, warn if invalid but continue with default behavior",
+      "Add test cases for findRootServerFile() covering: custom path provided, fallback order, file not found scenarios",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "Prefix Parser",
+    "description": "Parse autoload.options.prefix from root server file to extract the route prefix. Look for pattern: `fastify.register(autoLoad, { dir: path.join(import.meta.dirname, 'api'), options: { prefix: '/api' } })`",
+    "steps": [
+      "Create new module src/prefix-parser.ts with function extractPrefixFromServerFile(filePath: string): string | null",
+      "Use AST parsing (leverage existing ast-parser.ts patterns) to find fastify.register() calls with autoLoad",
+      "Extract the prefix value from options.prefix property, handle both string literals and template literals",
+      "Return null if prefix cannot be found; fallback to '/api' will be handled by caller",
+      "Add test cases for: valid prefix extraction, missing prefix, malformed code, different quote styles",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "CLI Flag: --comment / -c",
+    "description": "Add --comment/-c flag (default: true) that adds a single-line comment with full URL above the partial URL in code. Full URL is constructed by combining prefix from root server file with the partial URL.",
+    "steps": [
+      "Add --comment flag to CLI argument parser in src/cli.ts with type: 'boolean', default: true",
+      "Update src/ast-modifier.ts to accept optional fullUrl parameter alongside the existing url parameter",
+      "Modify AST modification logic to insert single-line comment `// Full URL: <prefix><url>` above the url property when fullUrl is provided",
+      "Handle edge cases: if prefix parsing fails, fall back to '/api' and emit warning to user",
+      "Add test cases for: comment added correctly, comment not added when flag is false, proper formatting of full URL",
+      "Verify changes work in browser for UI-visible routes",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  },
+  {
+    "category": "Integration",
+    "description": "Wire together root file finder, prefix parser, and comment flag in the main route synchronization flow.",
+    "steps": [
+      "Update src/route-synchronizer.ts to call findRootServerFile() with CLI --root value",
+      "Call extractPrefixFromServerFile() on the found root file to get prefix (or use '/api' default)",
+      "Pass both prefix and partial URL to ast-modifier when --comment flag is true",
+      "Add warning messages when root file not found or prefix cannot be parsed (inform user of fallback behavior)",
+      "Add integration test covering full flow: custom root file → prefix extraction → comment generation",
+      "Verify changes work in browser for end-to-end scenarios",
+      "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
+    ],
+    "started": false,
+    "complete": false
+  }
+]
