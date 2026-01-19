@@ -9,9 +9,13 @@ describe('generateRouteTemplate', () => {
       expect(template).toContain("method: 'GET'")
       expect(template).toContain("url: '/users'")
       expect(template).toContain('import type { FastifyInstance }')
-      expect(template).toContain('import type { FastifyZodOpenApiTypeProvider }')
+      expect(template).toContain(
+        'import type { FastifyZodOpenApiTypeProvider }',
+      )
       expect(template).toContain("import { z } from 'zod'")
-      expect(template).toContain('withTypeProvider<FastifyZodOpenApiTypeProvider>()')
+      expect(template).toContain(
+        'withTypeProvider<FastifyZodOpenApiTypeProvider>()',
+      )
       expect(template).toContain('async handler(req, reply)')
     })
 
@@ -89,7 +93,11 @@ describe('generateRouteTemplate', () => {
     })
 
     it('should handle deeply nested paths', () => {
-      const template = generateRouteTemplate('/api/v2/users/:id/posts/:postId', 'GET', true)
+      const template = generateRouteTemplate(
+        '/api/v2/users/:id/posts/:postId',
+        'GET',
+        true,
+      )
 
       expect(template).toContain("url: '/api/v2/users/:id/posts/:postId'")
     })
@@ -101,7 +109,11 @@ describe('generateRouteTemplate', () => {
     })
 
     it('should handle paths with multiple parameters', () => {
-      const template = generateRouteTemplate('/orgs/:orgId/projects/:projectId', 'GET', true)
+      const template = generateRouteTemplate(
+        '/orgs/:orgId/projects/:projectId',
+        'GET',
+        true,
+      )
 
       expect(template).toContain("url: '/orgs/:orgId/projects/:projectId'")
     })
@@ -111,21 +123,29 @@ describe('generateRouteTemplate', () => {
     it('should include all necessary imports', () => {
       const template = generateRouteTemplate('/test', 'GET', true)
 
-      expect(template).toContain("import type { FastifyInstance } from 'fastify'")
-      expect(template).toContain("import type { FastifyZodOpenApiTypeProvider } from 'fastify-zod-openapi'")
+      expect(template).toContain(
+        "import type { FastifyInstance } from 'fastify'",
+      )
+      expect(template).toContain(
+        "import type { FastifyZodOpenApiTypeProvider } from 'fastify-zod-openapi'",
+      )
       expect(template).toContain("import { z } from 'zod'")
     })
 
     it('should export default async function', () => {
       const template = generateRouteTemplate('/test', 'GET', true)
 
-      expect(template).toContain('export default async function (fastify: FastifyInstance)')
+      expect(template).toContain(
+        'export default async function (fastify: FastifyInstance)',
+      )
     })
 
     it('should include withTypeProvider', () => {
       const template = generateRouteTemplate('/test', 'GET', true)
 
-      expect(template).toContain('fastify.withTypeProvider<FastifyZodOpenApiTypeProvider>().route({')
+      expect(template).toContain(
+        'fastify.withTypeProvider<FastifyZodOpenApiTypeProvider>().route({',
+      )
     })
 
     it('should include response schema', () => {
@@ -202,7 +222,11 @@ describe('generateRouteTemplate', () => {
     })
 
     it('should generate template for nested resource', () => {
-      const template = generateRouteTemplate('/users/:userId/posts/:postId', 'GET', false)
+      const template = generateRouteTemplate(
+        '/users/:userId/posts/:postId',
+        'GET',
+        false,
+      )
 
       expect(template).toContain("method: 'GET'")
       expect(template).toContain("url: '/users/:userId/posts/:postId'")

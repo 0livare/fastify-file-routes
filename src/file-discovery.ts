@@ -98,7 +98,8 @@ export function discoverRouteFiles(
 
         // If this directory has an index file (index.ts/index.js), ignore all other sibling files
         // (but still process the index file itself)
-        const isIndexFile = entry.name === 'index.ts' || entry.name === 'index.js'
+        const isIndexFile =
+          entry.name === 'index.ts' || entry.name === 'index.js'
 
         if (hasIndexFile && !isIndexFile) {
           // This file is invalid - it's a sibling of an index file

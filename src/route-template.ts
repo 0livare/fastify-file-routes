@@ -13,7 +13,10 @@ export function isZodInstalled(projectRoot: string = process.cwd()): boolean {
     const dependencies = packageJson.dependencies || {}
     const devDependencies = packageJson.devDependencies || {}
 
-    return !!(dependencies['fastify-type-provider-zod'] || devDependencies['fastify-type-provider-zod'])
+    return !!(
+      dependencies['fastify-type-provider-zod'] ||
+      devDependencies['fastify-type-provider-zod']
+    )
   } catch {
     // If package.json doesn't exist or can't be read, default to false
     return false
@@ -31,7 +34,7 @@ export function isZodInstalled(projectRoot: string = process.cwd()): boolean {
 export function generateRouteTemplate(
   url: string,
   method: HttpMethod,
-  useZod?: boolean
+  useZod?: boolean,
 ): string {
   const shouldUseZod = useZod ?? isZodInstalled()
 

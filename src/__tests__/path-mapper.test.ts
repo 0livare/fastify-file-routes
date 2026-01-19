@@ -70,9 +70,33 @@ describe('filePathToUrlPath', () => {
     })
 
     it('handles multiple segments with name.$param pattern', () => {
+      expect(filePathToUrlPath('src/api/users/profile.$userId.get.ts')).toBe(
+        '/profile/:userId',
+      )
+    })
+
+    it('excludes parent directory for name.$param files in subdirectories (bug fix)', () => {
+      expect(filePathToUrlPath('src/api/examples/foobar.$count.get.ts')).toBe(
+        '/foobar/:count',
+      )
+    })
+
+    it('excludes parent directory for name.$param in deeply nested paths', () => {
+      expect(filePathToUrlPath('src/api/v1/admin/item.$itemId.get.ts')).toBe(
+        '/item/:itemId',
+      )
+    })
+
+    it('excludes multiple parent directories for name.$param files', () => {
       expect(
-        filePathToUrlPath('src/api/users/profile.$userId.get.ts'),
-      ).toBe('/users/profile/:userId')
+        filePathToUrlPath('src/api/org/team/member.$memberId.post.ts'),
+      ).toBe('/member/:memberId')
+    })
+
+    it('handles name.$param with pathless parent directories', () => {
+      expect(
+        filePathToUrlPath('src/api/_layout/products/item.$productId.get.ts'),
+      ).toBe('/item/:productId')
     })
   })
 

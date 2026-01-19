@@ -2,6 +2,22 @@
 
 ## Learnings
 
-(Patterns discovered during implementation)
+### Bug Fix: Pathless Layout for name.$param Files
+
+**Issue**: Files with the `name.$param` pattern in subdirectories were incorrectly including their parent directory in the URL path.
+
+**Root Cause**: In `src/path-mapper.ts`, when processing segments with the `.$ ` pattern (e.g., `foobar.$count`), the function was collecting all parent directory segments before adding the file's segments. This resulted in URLs like `/examples/foobar/:count` instead of `/foobar/:count`.
+
+**Solution**: When a file (last segment) contains the `name.$param` pattern and is in a subdirectory (i > 0), clear all previously collected URL segments before adding the file's segments. This is because Fastify's autoload plugin handles directory-based routing, so files with `name.$param` should define their own route segments without including parent directories.
+
+**Key Code Change**: Added logic in path-mapper.ts:51-55 to check if the segment is the last one with a `.$ ` pattern and has parent directories, then clear `urlSegments.length = 0` before processing.
+
+**Test Cases Added**:
+- `src/api/examples/foobar.$count.get.ts` → `/foobar/:count`
+- `src/api/v1/admin/item.$itemId.get.ts` → `/item/:itemId`
+- `src/api/org/team/member.$memberId.post.ts` → `/member/:memberId`
+- `src/api/_layout/products/item.$productId.get.ts` → `/item/:productId`
+
+**Updated Test**: The existing test for `src/api/users/profile.$userId.get.ts` was corrected from expecting `/users/profile/:userId` to `/profile/:userId` to match the correct behavior.
 
 ---

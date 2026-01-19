@@ -48,6 +48,12 @@ export function filePathToUrlPath(filePath: string): string | null {
     // Check if segment contains .$ pattern (e.g., zach.$zachId)
     const dotParamIndex = segment.indexOf('.$')
     if (dotParamIndex > 0) {
+      // When a file has name.$param pattern in a subdirectory,
+      // skip all parent directories since autoload handles the directory-based routing
+      if (isLastSegment && i > 0) {
+        // Clear any previously collected segments for files with .$ pattern in subdirectories
+        urlSegments.length = 0
+      }
       // Split into prefix and param parts
       const prefix = segment.substring(0, dotParamIndex)
       const param = segment.substring(dotParamIndex + 2)

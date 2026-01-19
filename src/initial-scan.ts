@@ -44,7 +44,9 @@ export function performInitialScan(
 
   // Report invalid files
   if (invalidFiles.length > 0) {
-    console.log(`⚠️  Warning: Found ${invalidFiles.length} invalid route file(s):`)
+    console.log(
+      `⚠️  Warning: Found ${invalidFiles.length} invalid route file(s):`,
+    )
     for (const invalid of invalidFiles) {
       console.log(`   ✗ ${invalid.filePath}`)
       console.log(`     ${invalid.reason}`)
