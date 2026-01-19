@@ -50,3 +50,42 @@
 **Status**: Feature complete and tested. Ready for integration with prefix parser.
 
 ---
+
+### Prefix Parser
+
+**Feature**: Created prefix parser module to extract route prefix from root server file.
+
+**Implementation**:
+1. Created new module `src/prefix-parser.ts` with `extractPrefixFromServerFile(filePath: string): string | null`
+2. Uses TypeScript AST parsing (following patterns from `ast-parser.ts`) to find `fastify.register()` calls
+3. Extracts prefix from two patterns:
+   - Direct prefix: `fastify.register(autoLoad, { prefix: '/api' })`
+   - Nested options: `fastify.register(autoLoad, { options: { prefix: '/api' } })`
+4. Returns null if prefix cannot be found (caller will handle fallback to '/api')
+
+**Key Implementation Details**:
+- Leverages TypeScript compiler API (`ts.createSourceFile`, `ts.isCallExpression`, etc.)
+- Handles string literals (single/double quotes) and template literals
+- Stops after finding first prefix (avoids processing multiple register calls unnecessarily)
+- Gracefully handles file read errors and malformed code by returning null
+- Recursive visitor pattern to traverse AST nodes
+- Helper function `extractPrefixFromOptions` handles both direct and nested prefix patterns
+
+**Test Cases Added** (all passing in `src/__tests__/prefix-parser.test.ts`):
+- Nested options.prefix extraction from realistic server file
+- Direct prefix property extraction
+- Single quotes, double quotes, and template literals
+- Missing prefix returns null
+- Nonexistent file returns null
+- Malformed code returns null
+- Variable references (not literals) return null
+- Multiple register calls (returns first prefix found)
+- Empty prefix string
+- Prefix without leading slash
+- Complex nested options with multiple properties
+
+**Status**: Feature complete and tested (13/13 tests passing). TypeScript compilation successful. Code formatted with Prettier. Ready for integration into route synchronization flow.
+
+**Note**: Pre-existing integration test failures in `src/__tests__/integration.test.ts` are unrelated to this feature (scaffolding tests failing due to module import issues that existed before this work).
+
+---
