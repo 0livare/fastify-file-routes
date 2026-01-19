@@ -21,3 +21,32 @@
 **Updated Test**: The existing test for `src/api/users/profile.$userId.get.ts` was corrected from expecting `/users/profile/:userId` to `/profile/:userId` to match the correct behavior.
 
 ---
+
+### CLI Flag: --root / -r
+
+**Feature**: Added `--root/-r` CLI flag to specify the root server file for reading route prefix.
+
+**Implementation**:
+1. Added `root: {type: 'string', short: 'r'}` to CLI argument parser in `src/cli.ts:13`
+2. Created new module `src/root-file-finder.ts` with `findRootServerFile(customPath?: string)` function
+3. Function searches for server files with extensions: .ts, .js, .mjs, .cjs
+4. Default fallback order when no custom path provided: `src/server`, `src/main`, `src/index`
+5. Returns absolute path to found file, or null if not found
+
+**Key Implementation Details**:
+- Supports multiple file extensions to accommodate different JavaScript/TypeScript setups
+- Priority order for extensions: .ts → .js → .mjs → .cjs
+- When custom path provided, only searches that path (no fallback)
+- When no custom path, checks default locations in order until file found
+
+**Test Cases Added** (all passing in `src/__tests__/root-file-finder.test.ts`):
+- Custom path with .ts, .js, .mjs, .cjs extensions
+- Custom path that doesn't exist (returns null)
+- Default fallback order behavior
+- Priority of src/server over src/main and src/index
+- No default files exist (returns null)
+- Extension priority (.ts over .js when both exist)
+
+**Status**: Feature complete and tested. Ready for integration with prefix parser.
+
+---

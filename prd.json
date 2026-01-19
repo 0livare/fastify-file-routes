@@ -23,8 +23,8 @@
       "Add test cases for findRootServerFile() covering: custom path provided, fallback order, file not found scenarios",
       "Ensure that all typecheck, test, and related lint npm scripts defined in package.json pass"
     ],
-    "started": false,
-    "complete": false
+    "started": true,
+    "complete": true
   },
   {
     "category": "Prefix Parser",
