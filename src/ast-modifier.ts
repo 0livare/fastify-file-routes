@@ -9,6 +9,7 @@ export interface ModificationResult {
 export interface RouteFields {
   url?: string
   method?: string
+  fullUrl?: string // If provided, adds a comment with the full URL above the url property
 }
 
 /**
@@ -123,6 +124,7 @@ export function modifyRouteFields(
     newValue: string
     nodeInfo: {node: ts.Node; quoteChar: string; start: number; end: number}
   }> = []
+  let urlPropertyNode: ts.PropertyAssignment | null = null
   let found = false
 
   function visit(node: ts.Node) {
@@ -153,6 +155,7 @@ export function modifyRouteFields(
                     newValue: fields.url,
                     nodeInfo: info,
                   })
+                  urlPropertyNode = prop
                 }
               } else if (propName === 'method' && fields.method !== undefined) {
                 const info = extractNodeInfo(value, fileContent)
@@ -200,10 +203,51 @@ export function modifyRouteFields(
     modifiedContent = `${before}${quoteChar}${newValue}${quoteChar}${after}`
   }
 
+  // Add full URL comment if requested and url property was found
+  if (fields.fullUrl && urlPropertyNode) {
+    modifiedContent = addFullUrlComment(
+      modifiedContent,
+      urlPropertyNode,
+      fields.fullUrl,
+      sourceFile,
+    )
+  }
+
   return {
     modified: true,
     content: modifiedContent,
   }
+}
+
+/**
+ * Adds a comment with the full URL above the url property
+ */
+function addFullUrlComment(
+  content: string,
+  urlPropertyNode: ts.PropertyAssignment,
+  fullUrl: string,
+  sourceFile: ts.SourceFile,
+): string {
+  // Get the position of the url property
+  const propStart = urlPropertyNode.getStart(sourceFile)
+
+  // Find the start of the line containing the url property
+  let lineStart = propStart
+  while (lineStart > 0 && content[lineStart - 1] !== '\n') {
+    lineStart--
+  }
+
+  // Get the indentation of the url property line
+  const indentation = content.substring(lineStart, propStart)
+
+  // Create the comment line with the same indentation
+  const comment = `${indentation}// Full URL: ${fullUrl}\n`
+
+  // Insert the comment before the url property
+  const before = content.substring(0, lineStart)
+  const after = content.substring(lineStart)
+
+  return `${before}${comment}${after}`
 }
 
 /**

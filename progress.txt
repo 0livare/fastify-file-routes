@@ -89,3 +89,43 @@
 **Note**: Pre-existing integration test failures in `src/__tests__/integration.test.ts` are unrelated to this feature (scaffolding tests failing due to module import issues that existed before this work).
 
 ---
+
+### CLI Flag: --comment / -c
+
+**Feature**: Added `--comment/-c` CLI flag (default: true) that adds a single-line comment with the full URL above the url property in route files.
+
+**Implementation**:
+1. Added `comment: {type: 'boolean', short: 'c', default: true}` to CLI argument parser in `src/cli.ts:14`
+2. Extended `RouteFields` interface in `src/ast-modifier.ts` to include optional `fullUrl?: string` parameter
+3. Modified `modifyRouteFields` function to track the `urlPropertyNode` when processing url field
+4. Created new helper function `addFullUrlComment` that:
+   - Finds the line containing the url property
+   - Preserves the indentation (spaces or tabs) of the url property
+   - Inserts a single-line comment `// Full URL: <fullUrl>` above the url property
+5. Comment is only added when `fullUrl` parameter is provided in the `RouteFields` object
+
+**Key Implementation Details**:
+- Comment preserves exact indentation (spaces or tabs) from the url property line
+- Works with any url property position (first, middle, or last in config object)
+- Compatible with all quote styles (single, double, template literals)
+- Does not add comment if `fullUrl` is not provided or is undefined
+- Comment format: `// Full URL: <prefix><partial-url>`
+
+**Test Cases Added** (all passing in `src/__tests__/ast-modifier.test.ts`):
+- Add full URL comment above url property
+- Preserve indentation in comment (spaces)
+- Work with tabs for indentation
+- Handle full URL with parameters
+- Work when modifying both url and method
+- Not add comment when fullUrl is not provided
+- Not add comment when fullUrl is undefined
+- Handle typical Fastify route file with comment
+- Handle nested route with complex prefix
+- Handle url as first property
+- Handle url as last property
+
+**Status**: Feature complete and tested (53/53 ast-modifier tests passing, including 11 new tests for comment functionality). TypeScript compilation successful. Code formatted with Prettier. Ready for integration with root file finder and prefix parser in the route synchronization flow.
+
+**Note**: Pre-existing integration test failures in `src/__tests__/integration.test.ts` (13 scaffolding-related tests) existed before this work and are unrelated to the comment flag feature.
+
+---

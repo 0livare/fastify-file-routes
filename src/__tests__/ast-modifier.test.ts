@@ -778,3 +778,223 @@ fastify.route({
     })
   })
 })
+
+describe('modifyRouteFields with fullUrl comment', () => {
+  describe('adding comment', () => {
+    it('should add full URL comment above url property', () => {
+      const code = `
+fastify.route({
+  url: '/users',
+  method: 'GET',
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {
+        url: '/users',
+        fullUrl: '/api/users',
+      })
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain('// Full URL: /api/users')
+      expect(result.content).toContain("url: '/users',")
+    })
+
+    it('should preserve indentation in comment', () => {
+      const code = `
+  fastify.route({
+    url: '/posts',
+    method: 'POST',
+  })
+      `.trim()
+
+      const result = modifyRouteFields(code, {
+        url: '/posts',
+        fullUrl: '/api/v1/posts',
+      })
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain('    // Full URL: /api/v1/posts')
+      expect(result.content).toContain("    url: '/posts',")
+    })
+
+    it('should work with tabs for indentation', () => {
+      const code = `
+\tfastify.route({
+\t\turl: '/items',
+\t\tmethod: 'GET',
+\t})
+      `.trim()
+
+      const result = modifyRouteFields(code, {
+        url: '/items',
+        fullUrl: '/api/items',
+      })
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain('\t\t// Full URL: /api/items')
+      expect(result.content).toContain("\t\turl: '/items',")
+    })
+
+    it('should handle full URL with parameters', () => {
+      const code = `
+fastify.route({
+  url: '/users/:id',
+  method: 'GET',
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {
+        url: '/users/:id',
+        fullUrl: '/api/v2/users/:id',
+      })
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain('// Full URL: /api/v2/users/:id')
+    })
+
+    it('should work when modifying both url and method', () => {
+      const code = `
+fastify.route({
+  url: '/old',
+  method: 'GET',
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {
+        url: '/new',
+        method: 'POST',
+        fullUrl: '/api/new',
+      })
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain('// Full URL: /api/new')
+      expect(result.content).toContain("url: '/new',")
+      expect(result.content).toContain("method: 'POST',")
+    })
+  })
+
+  describe('not adding comment', () => {
+    it('should not add comment when fullUrl is not provided', () => {
+      const code = `
+fastify.route({
+  url: '/users',
+  method: 'GET',
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {url: '/users'})
+
+      expect(result.modified).toBe(true)
+      expect(result.content).not.toContain('// Full URL:')
+    })
+
+    it('should not add comment when fullUrl is undefined', () => {
+      const code = `
+fastify.route({
+  url: '/users',
+  method: 'GET',
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {
+        url: '/users',
+        fullUrl: undefined,
+      })
+
+      expect(result.modified).toBe(true)
+      expect(result.content).not.toContain('// Full URL:')
+    })
+  })
+
+  describe('real-world scenarios', () => {
+    it('should handle typical Fastify route file with comment', () => {
+      const code = `
+import {FastifyInstance} from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/users/:id',
+    method: 'GET',
+    handler: async (request, reply) => {
+      const {id} = request.params
+      return {id}
+    },
+  })
+}
+      `.trim()
+
+      const result = modifyRouteFields(code, {
+        url: '/users/:id',
+        fullUrl: '/api/users/:id',
+      })
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain('    // Full URL: /api/users/:id')
+      expect(result.content).toContain("    url: '/users/:id',")
+      expect(result.content).toContain('import {FastifyInstance}')
+    })
+
+    it('should handle nested route with complex prefix', () => {
+      const code = `
+fastify.route({
+  url: '/profile/:userId',
+  method: 'PATCH',
+  schema: {
+    params: UserIdSchema,
+  },
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {
+        url: '/profile/:userId',
+        fullUrl: '/api/v2/profile/:userId',
+      })
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain('  // Full URL: /api/v2/profile/:userId')
+      expect(result.content).toContain("  url: '/profile/:userId',")
+    })
+  })
+
+  describe('formatting edge cases', () => {
+    it('should handle url as first property', () => {
+      const code = `
+fastify.route({
+  url: '/test',
+  method: 'GET',
+  handler: async () => {},
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {
+        url: '/test',
+        fullUrl: '/api/test',
+      })
+
+      expect(result.modified).toBe(true)
+      const lines = result.content!.split('\n')
+      // Check that comment is before url
+      expect(lines[1].trim()).toBe('// Full URL: /api/test')
+      expect(lines[2].trim()).toBe("url: '/test',")
+    })
+
+    it('should handle url as last property', () => {
+      const code = `
+fastify.route({
+  method: 'GET',
+  handler: async () => {},
+  url: '/test',
+})
+      `.trim()
+
+      const result = modifyRouteFields(code, {
+        url: '/test',
+        fullUrl: '/api/test',
+      })
+
+      expect(result.modified).toBe(true)
+      expect(result.content).toContain('  // Full URL: /api/test')
+      expect(result.content).toContain("  url: '/test',")
+    })
+  })
+})
