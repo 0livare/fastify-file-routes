@@ -1,4 +1,4 @@
-# Fastify File-Based Routing CLI
+# Fastify Sync CLI
 
 With [@fastify/autoload] and a good naming convention, you can _almost_ achieve file-based routing in Fastify. But you still have the issue of keeping your route `url` in sync with your file path.
 
@@ -6,13 +6,13 @@ This CLI tool watches your API route files and automatically keeps the `url` and
 
 It also establishes a fully-featured naming convention similar to [Tanstack Router](https://tanstack.com/router/v1/docs/framework/react/routing/file-based-routing):
 
-| URL                         | File Name                         | Note                                                                                                                                                                 |
-| --------------------------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /api/users`            | `src/api/users.get.ts`            | HTTP method is suffixed to the end of the file name                                                                                                                  |
-| `POST /api/users/:userId`   | `src/api/users/$userId.post.ts`   | Directories become URL segments; `$` prefix becomes `:` for fastify route params                                                                                     |
-| `DELETE /api/users/:userId` | `src/api/users.$userId.delete.ts` | Dots can also be used to separate params from the rest of the file name                                                                                              |
-| `POST /api/login`           | `src/api/_auth/login.post.ts`     | Files/folders starting with `_` are excluded from URL                                                                                                                |
-| `GET /api/files`            | `src/api/files/index.get.ts`      | `index` files map to parent path, but [cause all other files in that dir to be ignored](https://github.com/fastify/fastify-autoload?tab=readme-ov-file#dir-required) |
+| File Name                         | URL                         | Note                                                                             |
+| --------------------------------- | --------------------------- | -------------------------------------------------------------------------------- |
+| `src/api/users.get.ts`            | `GET /api/users`            | HTTP method is suffixed to the end of the file name                              |
+| `src/api/users/$userId.post.ts`   | `POST /api/users/:userId`   | Directories become URL segments; `$` prefix becomes `:` for fastify route params |
+| `src/api/users.$userId.delete.ts` | `DELETE /api/users/:userId` | Dots can also be used to separate params from the rest of the file name          |
+| `src/api/_auth/login.post.ts`     | `POST /api/login`           | Files/folders starting with `_` are excluded from URL                            |
+| `src/api/files/index.get.ts`      | `GET /api/files`            | `index.verb` files map to parent path                                            |
 
 > [!NOTE]
 > It is recommended to configure `@fastify/autoload` with the initial `/api` prefix so that your routes match your file structure exactly, but that is not required. If it's missing, the previous exmples should remove `/api` from the beginning of the URLs.
@@ -26,7 +26,7 @@ It also establishes a fully-featured naming convention similar to [Tanstack Rout
 
 > [!important]
 >
-> `@fastify/autoload` has a [restriction](https://github.com/fastify/fastify-autoload?tab=readme-ov-file#dir-required) where if a directory contains an `index` file, it will only load that file and ignore other files in the same directory. So this tool inherits that same limitation.
+> `@fastify/autoload` has a [restriction](https://github.com/fastify/fastify-autoload?tab=readme-ov-file#dir-required) where if a directory contains an `index.ts/js` file, it will only load that file and ignore other files in the same directory. So this tool inherits that same limitation. However that restriction does not apply to `index.verb.ts/js` files.
 
 ## Features
 
@@ -50,16 +50,22 @@ It also establishes a fully-featured naming convention similar to [Tanstack Rout
 > Prerequisite: You must have [Bun](https://bun.sh) installed globally.
 
 ```bash
-# Creates a global `ffr` cli command
-npm i -g fastify-file-routes
+# Creates a global `fastify-sync` cli command
+npm i -g fastify-sync
 ```
 
 ## Usage
 
-Run the `ffr` command from your project root to watch your API routes:
+Run the `fastify-sync` command from your project root to watch your API routes:
 
 ```bash
-ffr
+fastify-sync
+```
+
+Commonly, you'll want Fastify Sync to run alongside your fastify server in dev mode. You can append it to your existing `dev` script with [concurrently](https://www.npmjs.com/package/concurrently):
+
+```json
+"dev": "concurrently --raw 'tsx --watch src/server.ts | pino-pretty' 'fastify-sync'",
 ```
 
 The CLI will:
@@ -76,7 +82,7 @@ The CLI will:
 
 ```bash
 # Run with verbose output
-ffr --verbose
+fastify-sync --verbose
 ```
 
 ## How it works
@@ -145,7 +151,7 @@ To run the CLI in development:
 bun src/watch.ts
 ```
 
-To link the global `ffr` command to this local development version:
+To link the global `fastify-sync` command to this local development version:
 
 ```bash
 bun link

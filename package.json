@@ -1,12 +1,12 @@
 {
-  "name": "fastify-file-routes",
+  "name": "fastify-sync",
   "version": "0.0.1",
   "description": "Automatic URL synchronization for Fastify file-based routing. Watches your API route files and keeps the url field in sync with the file path.",
   "author": "Zach Olivare <https://github.com/0livare>",
   "license": "ISC",
-  "repository": "https://github.com/0livare/fastify-file-routes",
+  "repository": "https://github.com/0livare/fastify-sync",
   "bin": {
-    "ffr": "src/watch.ts"
+    "fastify-sync": "src/watch.ts"
   },
   "files": [
     "src"

@@ -28,7 +28,7 @@ async function main() {
   const apiDir = path.join(process.cwd(), 'src/api')
 
   if (verbose) {
-    console.log(chalk.bold.blue('🚀 Fastify File-Based Routing CLI'))
+    console.log(chalk.bold.blue('🚀 Fastify Sync'))
     console.log(chalk.gray(`Watching: ${apiDir}\n`))
 
     // Perform initial scan

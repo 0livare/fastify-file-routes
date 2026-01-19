@@ -1,7 +1,7 @@
 import chalk from 'chalk'
 
 export function help() {
-  console.log(chalk.bold.blue('🚀 Fastify File-Based Routing CLI'))
+  console.log(chalk.bold.blue('🚀 Fastify Sync CLI'))
   console.log()
   console.log(
     chalk.gray(
@@ -10,13 +10,24 @@ export function help() {
   )
   console.log()
   console.log(chalk.bold('Usage:'))
-  console.log('  ffr              ' + chalk.gray('Watch src/api for changes'))
-  console.log('  ffr --help       ' + chalk.gray('Show this help message'))
-  console.log('  ffr -h           ' + chalk.gray('Show this help message'))
-  console.log('  ffr --version    ' + chalk.gray('Show version number'))
-  console.log('  ffr -v           ' + chalk.gray('Show version number'))
   console.log(
-    '  ffr --verbose    ' + chalk.gray('Show detailed output during operation'),
+    '  fastify-sync              ' + chalk.gray('Watch src/api for changes'),
+  )
+  console.log(
+    '  fastify-sync --help       ' + chalk.gray('Show this help message'),
+  )
+  console.log(
+    '  fastify-sync -h           ' + chalk.gray('Show this help message'),
+  )
+  console.log(
+    '  fastify-sync --version    ' + chalk.gray('Show version number'),
+  )
+  console.log(
+    '  fastify-sync -v           ' + chalk.gray('Show version number'),
+  )
+  console.log(
+    '  fastify-sync --verbose    ' +
+      chalk.gray('Show detailed output during operation'),
   )
   console.log()
   console.log(chalk.bold('How it works:'))
@@ -32,18 +43,29 @@ export function help() {
   console.log()
   console.log(chalk.bold('Routing conventions:'))
   console.log(
-    chalk.gray('  • src/api/users.get.ts              → url: "/users" (GET)'),
-  )
-  console.log(
     chalk.gray(
-      '  • src/api/users/$id.get.ts          → url: "/users/:id" (GET)',
+      '  • src/api/users.get.ts              → url: "/api/users" (GET)',
     ),
   )
   console.log(
-    chalk.gray('  • src/api/users/index.post.ts       → url: "/users" (POST)'),
+    chalk.gray(
+      '  • src/api/users/$id.get.ts          → url: "/api/users/:id" (GET)',
+    ),
   )
   console.log(
-    chalk.gray('  • src/api/_auth/login.post.ts       → url: "/login" (POST)'),
+    chalk.gray(
+      '  • src/api/users.$id.get.ts          → url: "/api/users/:id" (GET)',
+    ),
+  )
+  console.log(
+    chalk.gray(
+      '  • src/api/users/index.post.ts       → url: "/api/users" (POST)',
+    ),
+  )
+  console.log(
+    chalk.gray(
+      '  • src/api/_auth/login.post.ts       → url: "/api/login" (POST)',
+    ),
   )
   console.log()
   console.log(chalk.bold('Supported HTTP methods:'))
@@ -51,10 +73,10 @@ export function help() {
   console.log()
   console.log(chalk.bold('Examples:'))
   console.log(chalk.cyan('  # Start watching your API directory (quiet mode)'))
-  console.log('  $ ffr')
+  console.log('  $ fastify-sync')
   console.log()
   console.log(chalk.cyan('  # Start watching with detailed output'))
-  console.log('  $ ffr --verbose')
+  console.log('  $ fastify-sync --verbose')
   console.log()
   console.log(chalk.cyan('  # The CLI will:'))
   console.log(chalk.gray('  • Scan all route files and fix any incorrect URLs'))

@@ -7,7 +7,7 @@ import {synchronizeRouteFile} from '../route-synchronizer'
 import {parseRouteFile} from '../ast-parser'
 
 /**
- * Integration tests for the complete Fastify File-Based Routing CLI.
+ * Integration tests for the complete Fastify Sync CLI.
  * These tests verify the full flow from file discovery through watching and modification.
  */
 describe('Integration Tests', () => {
@@ -1073,8 +1073,8 @@ export default async function (fastify) {
 
         if (event.type === 'add') {
           // Extract method from filename
-          const extractHttpMethod = require('../method-extractor')
-            .extractHttpMethod
+          const extractHttpMethod =
+            require('../method-extractor').extractHttpMethod
           const expectedMethod = extractHttpMethod(event.filePath)
           if (expectedMethod) {
             synchronizeRouteFile(event.filePath, '/test', expectedMethod)
@@ -1242,7 +1242,10 @@ export default async function (fastify: FastifyInstance) {
             const expectedMethod = extractHttpMethod(event.filePath)
 
             if (expectedUrl && expectedMethod) {
-              const template = generateRouteTemplate(expectedUrl, expectedMethod)
+              const template = generateRouteTemplate(
+                expectedUrl,
+                expectedMethod,
+              )
               fs.writeFileSync(event.filePath, template, 'utf-8')
             }
           }
@@ -1264,7 +1267,9 @@ export default async function (fastify: FastifyInstance) {
 
       // Verify the file was scaffolded
       const content = fs.readFileSync(newFilePath, 'utf-8')
-      expect(content).toContain("import type { FastifyInstance } from 'fastify'")
+      expect(content).toContain(
+        "import type { FastifyInstance } from 'fastify'",
+      )
       expect(content).toContain("method: 'GET'")
       expect(content).toContain("url: '/users'")
       expect(content).toContain('fastify.route({')
@@ -1343,7 +1348,11 @@ export default async function (fastify) {
       const files = [
         {path: 'users.get.ts', method: 'GET', url: '/users'},
         {path: 'users.post.ts', method: 'POST', url: '/users'},
-        {path: 'products/$id.delete.ts', method: 'DELETE', url: '/products/:id'},
+        {
+          path: 'products/$id.delete.ts',
+          method: 'DELETE',
+          url: '/products/:id',
+        },
       ]
 
       // Create all files as empty
@@ -1370,7 +1379,10 @@ export default async function (fastify) {
       const watcher = createScaffoldingWatcher(testDir)
       await delay(200)
 
-      const deepPath = path.join(testDir, 'api/v2/orgs/$orgId/projects/$projectId')
+      const deepPath = path.join(
+        testDir,
+        'api/v2/orgs/$orgId/projects/$projectId',
+      )
       fs.mkdirSync(deepPath, {recursive: true})
       const newFilePath = path.join(deepPath, 'tasks.get.ts')
       fs.writeFileSync(newFilePath, '', 'utf-8')
@@ -1379,7 +1391,9 @@ export default async function (fastify) {
 
       const content = fs.readFileSync(newFilePath, 'utf-8')
       expect(content).toContain("method: 'GET'")
-      expect(content).toContain("url: '/api/v2/orgs/:orgId/projects/:projectId/tasks'")
+      expect(content).toContain(
+        "url: '/api/v2/orgs/:orgId/projects/:projectId/tasks'",
+      )
 
       await watcher.close()
     })
