@@ -62,6 +62,18 @@ describe('filePathToUrlPath', () => {
         filePathToUrlPath('src/api/$companyId/users/.$userId.get.ts'),
       ).toBe('/:companyId/users/:userId')
     })
+
+    it('converts name.$paramId to name/:paramId (e.g., zach.$zachId)', () => {
+      expect(filePathToUrlPath('src/api/zach.$zachId.put.ts')).toBe(
+        '/zach/:zachId',
+      )
+    })
+
+    it('handles multiple segments with name.$param pattern', () => {
+      expect(
+        filePathToUrlPath('src/api/users/profile.$userId.get.ts'),
+      ).toBe('/users/profile/:userId')
+    })
   })
 
   describe('index files', () => {

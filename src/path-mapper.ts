@@ -45,8 +45,17 @@ export function filePathToUrlPath(filePath: string): string | null {
       continue
     }
 
+    // Check if segment contains .$ pattern (e.g., zach.$zachId)
+    const dotParamIndex = segment.indexOf('.$')
+    if (dotParamIndex > 0) {
+      // Split into prefix and param parts
+      const prefix = segment.substring(0, dotParamIndex)
+      const param = segment.substring(dotParamIndex + 2)
+      urlSegments.push(prefix)
+      urlSegments.push(':' + param)
+    }
     // Convert route parameters: $userId or .$userId → :userId
-    if (segment.startsWith('$')) {
+    else if (segment.startsWith('$')) {
       urlSegments.push(':' + segment.substring(1))
     } else if (segment.startsWith('.$')) {
       urlSegments.push(':' + segment.substring(2))
