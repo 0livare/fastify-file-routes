@@ -1550,4 +1550,162 @@ export default async function (fastify) {
       await watcher.close()
     })
   })
+
+  describe('Integration: Prefix Parser and Comment Flag', () => {
+    it('should extract prefix from root server file and add full URL comments', () => {
+      // Create a root server file with prefix
+      const serverContent = `
+import Fastify from 'fastify'
+import autoLoad from '@fastify/autoload'
+import path from 'path'
+
+const fastify = Fastify()
+
+fastify.register(autoLoad, {
+  dir: path.join(import.meta.dirname, 'api'),
+  options: { prefix: '/v1' }
+})
+
+fastify.listen({ port: 3000 })
+`
+
+      fs.writeFileSync(path.join(testDir, '../server.ts'), serverContent)
+
+      // Create test route file with incorrect URL
+      const usersContent = `
+import type { FastifyInstance } from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/wrong-users-url',
+    method: 'GET',
+    handler: async (request, reply) => {
+      return { users: [] }
+    }
+  })
+}
+`
+
+      fs.mkdirSync(path.join(testDir, 'users'), {recursive: true})
+      const usersFile = path.join(testDir, 'users/index.get.ts')
+      fs.writeFileSync(usersFile, usersContent)
+
+      // Perform initial scan with config
+      const result = performInitialScan(testDir, {
+        rootFile: path.join(testDir, '../server'),
+        addComments: true,
+      })
+
+      // Verify scan results
+      expect(result.totalFiles).toBe(1)
+      expect(result.filesUpdated).toBe(1)
+
+      // Verify file was modified with comment
+      const updatedContent = fs.readFileSync(usersFile, 'utf-8')
+      expect(updatedContent).toContain("url: '/users'")
+      expect(updatedContent).toContain('// Full URL: /v1/users')
+
+      // Verify the comment is above the url property
+      const lines = updatedContent.split('\n')
+      const commentLineIndex = lines.findIndex((line) =>
+        line.includes('// Full URL: /v1/users'),
+      )
+      const urlLineIndex = lines.findIndex((line) =>
+        line.includes("url: '/users'"),
+      )
+      expect(commentLineIndex).toBeGreaterThan(-1)
+      expect(urlLineIndex).toBeGreaterThan(-1)
+      expect(commentLineIndex).toBeLessThan(urlLineIndex)
+
+      // Clean up
+      fs.unlinkSync(path.join(testDir, '../server.ts'))
+    })
+
+    it('should use default prefix when root file not found', () => {
+      // Create test route file with incorrect URL
+      const usersContent = `
+import type { FastifyInstance } from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/wrong-url',
+    method: 'POST',
+    handler: async (request, reply) => {
+      return { success: true }
+    }
+  })
+}
+`
+
+      const usersFile = path.join(testDir, 'users.post.ts')
+      fs.writeFileSync(usersFile, usersContent)
+
+      // Mock console.warn to capture warnings
+      const originalWarn = console.warn
+      const warnings: string[] = []
+      console.warn = (...args: any[]) => {
+        warnings.push(args.join(' '))
+      }
+
+      // Perform initial scan with config (root file doesn't exist)
+      const result = performInitialScan(testDir, {
+        rootFile: 'nonexistent/server',
+        addComments: true,
+      })
+
+      // Restore console.warn
+      console.warn = originalWarn
+
+      // Verify scan results
+      expect(result.totalFiles).toBe(1)
+      expect(result.filesUpdated).toBe(1)
+
+      // Verify warning was emitted
+      expect(
+        warnings.some((w) => w.includes('Specified root file not found')),
+      ).toBe(true)
+      expect(
+        warnings.some((w) => w.includes('Using default prefix: /api')),
+      ).toBe(true)
+
+      // Verify file was modified with default prefix
+      const updatedContent = fs.readFileSync(usersFile, 'utf-8')
+      expect(updatedContent).toContain("url: '/users'")
+      expect(updatedContent).toContain('// Full URL: /api/users')
+    })
+
+    it('should not add comments when addComments is false', () => {
+      // Create test route file with incorrect URL
+      const usersContent = `
+import type { FastifyInstance } from 'fastify'
+
+export default async function (fastify: FastifyInstance) {
+  fastify.route({
+    url: '/wrong-url',
+    method: 'GET',
+    handler: async (request, reply) => {
+      return { users: [] }
+    }
+  })
+}
+`
+
+      const usersFile = path.join(testDir, 'users.get.ts')
+      fs.writeFileSync(usersFile, usersContent)
+
+      // Perform initial scan with comments disabled
+      const result = performInitialScan(testDir, {
+        addComments: false,
+      })
+
+      // Verify scan results
+      expect(result.totalFiles).toBe(1)
+      expect(result.filesUpdated).toBe(1)
+
+      // Verify file was modified WITHOUT comment
+      const updatedContent = fs.readFileSync(usersFile, 'utf-8')
+      expect(updatedContent).toContain("url: '/users'")
+      expect(updatedContent).not.toContain('// Full URL:')
+    })
+  })
 })

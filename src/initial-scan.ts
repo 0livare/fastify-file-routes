@@ -1,6 +1,10 @@
 import {discoverRouteFiles} from './file-discovery'
 import {detectAndResolveConflicts} from './conflict-detector'
-import {synchronizeRoutes, type SyncSummary} from './route-synchronizer'
+import {
+  synchronizeRoutes,
+  type SyncSummary,
+  type SyncConfig,
+} from './route-synchronizer'
 
 /**
  * Result of the initial scan operation
@@ -31,10 +35,12 @@ export interface InitialScanResult {
  * 5. Prints a summary of the operations performed
  *
  * @param apiDir - Root directory to scan (default: 'src/api')
+ * @param config - Optional configuration for synchronization (prefix, comments, etc.)
  * @returns InitialScanResult with detailed statistics
  */
 export function performInitialScan(
   apiDir: string = 'src/api',
+  config?: SyncConfig,
 ): InitialScanResult {
   console.log('🔍 Scanning route files...')
 
@@ -90,7 +96,7 @@ export function performInitialScan(
 
   // Step 4: Synchronize all valid files (excluding invalid files)
   console.log('🔄 Synchronizing route files...')
-  const syncSummary = synchronizeRoutes(fileUrlMap, fileRouteMap)
+  const syncSummary = synchronizeRoutes(fileUrlMap, fileRouteMap, config)
 
   // Step 5: Print summary
   console.log('\n📊 Summary:')

@@ -129,3 +129,46 @@
 **Note**: Pre-existing integration test failures in `src/__tests__/integration.test.ts` (13 scaffolding-related tests) existed before this work and are unrelated to the comment flag feature.
 
 ---
+
+### Integration
+
+**Feature**: Integrated root file finder, prefix parser, and comment flag into the main route synchronization flow.
+
+**Implementation**:
+1. Extended `src/route-synchronizer.ts` with new `SyncConfig` interface for configuration
+2. Created `getPrefixWithFallback()` helper function that:
+   - Calls `findRootServerFile()` with optional custom path
+   - Calls `extractPrefixFromServerFile()` on found file
+   - Falls back to '/api' default when root file not found or prefix cannot be parsed
+   - Emits user-friendly warnings when fallback is used
+3. Updated `synchronizeRouteFile()` to accept optional `SyncConfig` parameter
+4. Modified route synchronization logic to:
+   - Get prefix from root server file (or use default)
+   - Add `fullUrl` field when `addComments` is true (default)
+   - Pass `fullUrl` to `modifyRouteFields()` to trigger comment insertion
+5. Updated `synchronizeRoutes()` to accept and pass config to individual file synchronization
+6. Updated `src/watch.ts` to:
+   - Build `syncConfig` from CLI arguments (`root` and `comment` flags)
+   - Pass config to `performInitialScan()` and `handleFileChange()`
+7. Updated `src/initial-scan.ts` to accept and pass `SyncConfig` to `synchronizeRoutes()`
+
+**Key Implementation Details**:
+- Config is optional throughout - backward compatibility maintained
+- Default behavior: comments enabled (`addComments: true`), prefix from root file or '/api'
+- Warning messages use `chalk.yellow()` for visibility
+- Comments only added when URL changes (not when URL already correct)
+- Prefix resolution happens once per file sync, with fallback chain:
+  1. Custom root file (if specified via --root flag)
+  2. Default locations: src/server → src/main → src/index
+  3. Default prefix: '/api'
+
+**Test Cases Added** (all passing in `src/__tests__/integration.test.ts`):
+- Extract prefix from root server file and add full URL comments
+- Use default prefix when root file not found (with warning verification)
+- Not add comments when addComments is false
+
+**Status**: Feature complete and tested (343/343 new and modified tests passing, including 3 new integration tests). TypeScript compilation successful. Code formatted with Prettier. All integration complete.
+
+**Note**: Pre-existing integration test failures (13 scaffolding-related tests) existed before this work and are unrelated to the integration feature. The scaffolding tests fail due to module import issues that existed before any of the PRD features were implemented.
+
+---
