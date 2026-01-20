@@ -1550,5 +1550,4 @@ export default async function (fastify) {
       await watcher.close()
     })
   })
-
 })

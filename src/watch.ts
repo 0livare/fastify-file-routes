@@ -30,22 +30,18 @@ async function main() {
   if (verbose) {
     console.log(chalk.bold.blue('🚀 Fastify Sync'))
     console.log(chalk.gray(`Watching: ${apiDir}\n`))
-
-    // Perform initial scan
     console.log(chalk.bold('📋 Running initial scan...'))
-    const scanResult = performInitialScan(apiDir)
+  }
 
+  const scanResult = performInitialScan(apiDir, verbose)
+  if (verbose) {
     if (scanResult.totalFiles === 0) {
       console.log(chalk.yellow('\n⚠️  No route files found in src/api'))
       console.log(
         chalk.gray('Create route files with .get.ts, .post.ts, etc. suffixes'),
       )
     }
-
-    console.log() // Empty line for spacing
-
-    // Set up file watcher
-    console.log(chalk.bold.green('👀 Watching for changes...\n'))
+    console.log(chalk.bold.green('\n👀 Watching for changes...\n'))
   }
 
   const watcher = createFileWatcher(apiDir, {
