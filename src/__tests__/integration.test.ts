@@ -91,16 +91,16 @@ export default async function (fastify: FastifyInstance) {
       const updatedUsersContent = fs.readFileSync(usersFile, 'utf-8')
       const updatedUserIdContent = fs.readFileSync(userIdFile, 'utf-8')
 
-      expect(updatedUsersContent).toContain("url: '/users'")
-      expect(updatedUserIdContent).toContain("url: '/users/:userId'")
+      expect(updatedUsersContent).toContain("url: '/api/users'")
+      expect(updatedUserIdContent).toContain("url: '/api/users/:userId'")
 
       // Verify the files are still valid TypeScript by parsing them
       const usersParsed = parseRouteFile(updatedUsersContent)
       const userIdParsed = parseRouteFile(updatedUserIdContent)
 
-      expect(usersParsed.url).toBe('/users')
+      expect(usersParsed.url).toBe('/api/users')
       expect(usersParsed.method).toBe('GET')
-      expect(userIdParsed.url).toBe('/users/:userId')
+      expect(userIdParsed.url).toBe('/api/users/:userId')
       expect(userIdParsed.method).toBe('GET')
 
       // Verify files can be imported (by checking they have valid syntax)
@@ -178,9 +178,9 @@ export default async function (fastify: FastifyInstance) {
         'utf-8',
       )
 
-      expect(apiIndexFile).toContain("url: '/'")
-      expect(productsFile).toContain("url: '/products'")
-      expect(productDetailFile).toContain("url: '/products/:id/details'")
+      expect(apiIndexFile).toContain("url: '/api'")
+      expect(productsFile).toContain("url: '/api/products'")
+      expect(productDetailFile).toContain("url: '/api/products/:id/details'")
     })
 
     it('should preserve quote style and formatting when modifying files', () => {
@@ -245,16 +245,16 @@ export default async function (fastify) {
       )
 
       // Check that single quotes are still used
-      expect(singleUpdated).toContain("url: '/quotes/single'")
-      expect(singleUpdated).not.toContain('url: "/quotes/single"')
+      expect(singleUpdated).toContain("url: '/api/quotes/single'")
+      expect(singleUpdated).not.toContain('url: "/api/quotes/single"')
 
       // Check that double quotes are still used
-      expect(doubleUpdated).toContain('url: "/quotes/double"')
-      expect(doubleUpdated).not.toContain("url: '/quotes/double'")
+      expect(doubleUpdated).toContain('url: "/api/quotes/double"')
+      expect(doubleUpdated).not.toContain("url: '/api/quotes/double'")
 
       // Check that template literals are still used
-      expect(templateUpdated).toContain('url: `/quotes/template`')
-      expect(templateUpdated).not.toContain("url: '/quotes/template'")
+      expect(templateUpdated).toContain('url: `/api/quotes/template`')
+      expect(templateUpdated).not.toContain("url: '/api/quotes/template'")
     })
   })
 
@@ -322,10 +322,10 @@ export default async function (fastify) {
         file3Content.match(/url: '([^']+)'/)?.[1],
       ]
 
-      // Check that we have one /users and two with suffixes
-      expect(urls).toContain('/users')
-      expect(urls).toContain('/users-2')
-      expect(urls).toContain('/users-3')
+      // Check that we have one /api/users and two with suffixes
+      expect(urls).toContain('/api/users')
+      expect(urls).toContain('/api/users-2')
+      expect(urls).toContain('/api/users-3')
       // All should be unique
       expect(new Set(urls).size).toBe(3)
     })
@@ -406,10 +406,10 @@ export default async function (fastify) {
         'utf-8',
       )
 
-      expect(usersGetContent).toContain("url: '/users'")
-      expect(usersPostContent).toContain("url: '/users-2'")
-      expect(productsGetContent).toContain("url: '/products'")
-      expect(productsPostContent).toContain("url: '/products-2'")
+      expect(usersGetContent).toContain("url: '/api/users'")
+      expect(usersPostContent).toContain("url: '/api/users-2'")
+      expect(productsGetContent).toContain("url: '/api/products'")
+      expect(productsPostContent).toContain("url: '/api/products-2'")
     })
   })
 
@@ -421,7 +421,7 @@ export default async function (fastify) {
 
         // When a file is added, synchronize it
         if (event.type === 'add') {
-          synchronizeRouteFile(event.filePath, '/test')
+          synchronizeRouteFile(event.filePath, '/api/test')
         }
       })
 
@@ -453,7 +453,7 @@ export default async function (fastify) {
 
       // Verify the file was synchronized
       const updatedContent = fs.readFileSync(newFilePath, 'utf-8')
-      expect(updatedContent).toContain("url: '/test'")
+      expect(updatedContent).toContain("url: '/api/test'")
 
       await watcher.close()
     })
@@ -478,7 +478,7 @@ export default async function (fastify) {
 
         // When a file changes, re-synchronize it
         if (event.type === 'change') {
-          synchronizeRouteFile(event.filePath, '/test')
+          synchronizeRouteFile(event.filePath, '/api/test')
         }
       })
 
@@ -509,7 +509,7 @@ export default async function (fastify) {
 
       // Verify the file was re-synchronized
       const finalContent = fs.readFileSync(filePath, 'utf-8')
-      expect(finalContent).toContain("url: '/test'")
+      expect(finalContent).toContain("url: '/api/test'")
       expect(finalContent).toContain('version: 2') // Handler was preserved
 
       await watcher.close()
@@ -672,11 +672,11 @@ export default async function (fastify: FastifyInstance) {
       // Verify URLs were corrected
       expect(
         fs.readFileSync(path.join(testDir, 'auth/login.post.ts'), 'utf-8'),
-      ).toContain("url: '/auth/login'")
+      ).toContain("url: '/api/auth/login'")
 
       expect(
         fs.readFileSync(path.join(testDir, 'users/index.get.ts'), 'utf-8'),
-      ).toContain("url: '/users'")
+      ).toContain("url: '/api/users'")
 
       expect(
         fs
@@ -685,7 +685,7 @@ export default async function (fastify: FastifyInstance) {
             'utf-8',
           )
           .replace(/\s+/g, ' '),
-      ).toContain("url: '/users/:userId'")
+      ).toContain("url: '/api/users/:userId'")
 
       // Products should have conflict resolution applied
       const productsGet = fs.readFileSync(
@@ -697,8 +697,8 @@ export default async function (fastify: FastifyInstance) {
         'utf-8',
       )
 
-      expect(productsGet).toContain("url: '/products'")
-      expect(productsPost).toContain("url: '/products-2'")
+      expect(productsGet).toContain("url: '/api/products'")
+      expect(productsPost).toContain("url: '/api/products-2'")
 
       // Verify all files are valid TypeScript
       expect(() => parseRouteFile(productsGet)).not.toThrow()
@@ -735,7 +735,7 @@ export default async function (fastify) {
         'utf-8',
       )
       expect(updatedContent).toContain(
-        "url: '/orgs/:orgId/projects/:projectId/tasks/:taskId'",
+        "url: '/api/orgs/:orgId/projects/:projectId/tasks/:taskId'",
       )
     })
 
@@ -796,7 +796,7 @@ export default async function (fastify: FastifyInstance) {
       )
 
       // Verify URL was updated
-      expect(updatedContent).toContain("url: '/users'")
+      expect(updatedContent).toContain("url: '/api/users'")
 
       // Verify all other configuration was preserved
       expect(updatedContent).toContain('schema:')
@@ -860,7 +860,7 @@ export default async function (fastify) {
       const correctContent = `
 export default async function (fastify) {
   fastify.route({
-    url: '/test',
+    url: '/api/test',
     method: 'GET',
     handler: async () => ({ correct: true })
   })
@@ -914,7 +914,7 @@ export default async function (fastify: FastifyInstance) {
       // Verify both method and URL are correct
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
       expect(updatedContent).toContain("method: 'POST'")
-      expect(updatedContent).toContain("url: '/users'")
+      expect(updatedContent).toContain("url: '/api/users'")
 
       // Verify the rest of the file is preserved
       expect(updatedContent).toContain('import type { FastifyInstance }')
@@ -945,7 +945,7 @@ export default async function (fastify) {
 
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
       expect(updatedContent).toContain("method: 'DELETE'")
-      expect(updatedContent).toContain("url: '/users/:id'")
+      expect(updatedContent).toContain("url: '/api/users/:id'")
     })
 
     it('should synchronize method when file is renamed from .post.ts to .patch.ts', () => {
@@ -983,7 +983,7 @@ export default async function (fastify: FastifyInstance) {
 
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
       expect(updatedContent).toContain("method: 'PATCH'")
-      expect(updatedContent).toContain("url: '/products/:productId'")
+      expect(updatedContent).toContain("url: '/api/products/:productId'")
       // Verify schema is preserved
       expect(updatedContent).toContain('schema:')
       expect(updatedContent).toContain('properties:')
@@ -1149,7 +1149,7 @@ export default async function (fastify) {
       const content = `
 export default async function (fastify) {
   fastify.route({
-    url: '/users',
+    url: '/api/users',
     method: 'GET',
     handler: async () => ({ users: [] })
   })
@@ -1195,7 +1195,7 @@ export default async function (fastify: FastifyInstance) {
       expect(result.filesUpdated).toBe(1)
 
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
-      expect(updatedContent).toContain("url: '/api/v2/users/:id'")
+      expect(updatedContent).toContain("url: '/api/api/v2/users/:id'")
       expect(updatedContent).toContain("method: 'PATCH'")
       // Verify handler preserved
       expect(updatedContent).toContain("return { data: 'test' }")
@@ -1271,7 +1271,7 @@ export default async function (fastify: FastifyInstance) {
         "import type { FastifyInstance } from 'fastify'",
       )
       expect(content).toContain("method: 'GET'")
-      expect(content).toContain("url: '/users'")
+      expect(content).toContain("url: '/api/users'")
       expect(content).toContain('fastify.route({')
       expect(content).toContain('async handler(req, reply)')
       // Since fastify-type-provider-zod is not installed in this project,
@@ -1294,7 +1294,7 @@ export default async function (fastify: FastifyInstance) {
 
       const content = fs.readFileSync(newFilePath, 'utf-8')
       expect(content).toContain("method: 'POST'")
-      expect(content).toContain("url: '/users'")
+      expect(content).toContain("url: '/api/users'")
 
       await watcher.close()
     })
@@ -1311,7 +1311,7 @@ export default async function (fastify: FastifyInstance) {
 
       const content = fs.readFileSync(newFilePath, 'utf-8')
       expect(content).toContain("method: 'PATCH'")
-      expect(content).toContain("url: '/users/:userId'")
+      expect(content).toContain("url: '/api/users/:userId'")
 
       await watcher.close()
     })
@@ -1368,7 +1368,7 @@ export default async function (fastify) {
       for (const file of files) {
         const content = fs.readFileSync(path.join(testDir, file.path), 'utf-8')
         expect(content).toContain(`method: '${file.method}'`)
-        expect(content).toContain(`url: '${file.url}'`)
+        expect(content).toContain(`url: '/api${file.url}'`)
         expect(content).toContain('FastifyInstance')
       }
 
@@ -1392,7 +1392,7 @@ export default async function (fastify) {
       const content = fs.readFileSync(newFilePath, 'utf-8')
       expect(content).toContain("method: 'GET'")
       expect(content).toContain(
-        "url: '/api/v2/orgs/:orgId/projects/:projectId/tasks'",
+        "url: '/api/api/v2/orgs/:orgId/projects/:projectId/tasks'",
       )
 
       await watcher.close()
@@ -1414,7 +1414,7 @@ export default async function (fastify) {
       expect(() => parseRouteFile(content)).not.toThrow()
 
       const routeConfig = parseRouteFile(content)
-      expect(routeConfig.url).toBe('/test')
+      expect(routeConfig.url).toBe('/api/test')
       expect(routeConfig.method).toBe('GET')
 
       await watcher.close()
@@ -1513,7 +1513,7 @@ export default async function (fastify) {
       const content = fs.readFileSync(indexGetPath, 'utf-8')
       expect(content).toContain('FastifyInstance')
       expect(content).toContain("method: 'GET'")
-      expect(content).toContain("url: '/docs'")
+      expect(content).toContain("url: '/api/docs'")
 
       await watcher.close()
     })
@@ -1545,167 +1545,10 @@ export default async function (fastify) {
       const content = fs.readFileSync(apiUsersPath, 'utf-8')
       expect(content).toContain('FastifyInstance')
       expect(content).toContain("method: 'GET'")
-      expect(content).toContain("url: '/docs/api/users'")
+      expect(content).toContain("url: '/api/docs/api/users'")
 
       await watcher.close()
     })
   })
 
-  describe('Integration: Prefix Parser and Comment Flag', () => {
-    it('should extract prefix from root server file and add full URL comments', () => {
-      // Create a root server file with prefix
-      const serverContent = `
-import Fastify from 'fastify'
-import autoLoad from '@fastify/autoload'
-import path from 'path'
-
-const fastify = Fastify()
-
-fastify.register(autoLoad, {
-  dir: path.join(import.meta.dirname, 'api'),
-  options: { prefix: '/v1' }
-})
-
-fastify.listen({ port: 3000 })
-`
-
-      fs.writeFileSync(path.join(testDir, '../server.ts'), serverContent)
-
-      // Create test route file with incorrect URL
-      const usersContent = `
-import type { FastifyInstance } from 'fastify'
-
-export default async function (fastify: FastifyInstance) {
-  fastify.route({
-    url: '/wrong-users-url',
-    method: 'GET',
-    handler: async (request, reply) => {
-      return { users: [] }
-    }
-  })
-}
-`
-
-      fs.mkdirSync(path.join(testDir, 'users'), {recursive: true})
-      const usersFile = path.join(testDir, 'users/index.get.ts')
-      fs.writeFileSync(usersFile, usersContent)
-
-      // Perform initial scan with config
-      const result = performInitialScan(testDir, {
-        rootFile: path.join(testDir, '../server'),
-        addComments: true,
-      })
-
-      // Verify scan results
-      expect(result.totalFiles).toBe(1)
-      expect(result.filesUpdated).toBe(1)
-
-      // Verify file was modified with comment
-      const updatedContent = fs.readFileSync(usersFile, 'utf-8')
-      expect(updatedContent).toContain("url: '/users'")
-      expect(updatedContent).toContain('// Full URL: /v1/users')
-
-      // Verify the comment is above the url property
-      const lines = updatedContent.split('\n')
-      const commentLineIndex = lines.findIndex((line) =>
-        line.includes('// Full URL: /v1/users'),
-      )
-      const urlLineIndex = lines.findIndex((line) =>
-        line.includes("url: '/users'"),
-      )
-      expect(commentLineIndex).toBeGreaterThan(-1)
-      expect(urlLineIndex).toBeGreaterThan(-1)
-      expect(commentLineIndex).toBeLessThan(urlLineIndex)
-
-      // Clean up
-      fs.unlinkSync(path.join(testDir, '../server.ts'))
-    })
-
-    it('should use default prefix when root file not found', () => {
-      // Create test route file with incorrect URL
-      const usersContent = `
-import type { FastifyInstance } from 'fastify'
-
-export default async function (fastify: FastifyInstance) {
-  fastify.route({
-    url: '/wrong-url',
-    method: 'POST',
-    handler: async (request, reply) => {
-      return { success: true }
-    }
-  })
-}
-`
-
-      const usersFile = path.join(testDir, 'users.post.ts')
-      fs.writeFileSync(usersFile, usersContent)
-
-      // Mock console.warn to capture warnings
-      const originalWarn = console.warn
-      const warnings: string[] = []
-      console.warn = (...args: any[]) => {
-        warnings.push(args.join(' '))
-      }
-
-      // Perform initial scan with config (root file doesn't exist)
-      const result = performInitialScan(testDir, {
-        rootFile: 'nonexistent/server',
-        addComments: true,
-      })
-
-      // Restore console.warn
-      console.warn = originalWarn
-
-      // Verify scan results
-      expect(result.totalFiles).toBe(1)
-      expect(result.filesUpdated).toBe(1)
-
-      // Verify warning was emitted
-      expect(
-        warnings.some((w) => w.includes('Specified root file not found')),
-      ).toBe(true)
-      expect(
-        warnings.some((w) => w.includes('Using default prefix: /api')),
-      ).toBe(true)
-
-      // Verify file was modified with default prefix
-      const updatedContent = fs.readFileSync(usersFile, 'utf-8')
-      expect(updatedContent).toContain("url: '/users'")
-      expect(updatedContent).toContain('// Full URL: /api/users')
-    })
-
-    it('should not add comments when addComments is false', () => {
-      // Create test route file with incorrect URL
-      const usersContent = `
-import type { FastifyInstance } from 'fastify'
-
-export default async function (fastify: FastifyInstance) {
-  fastify.route({
-    url: '/wrong-url',
-    method: 'GET',
-    handler: async (request, reply) => {
-      return { users: [] }
-    }
-  })
-}
-`
-
-      const usersFile = path.join(testDir, 'users.get.ts')
-      fs.writeFileSync(usersFile, usersContent)
-
-      // Perform initial scan with comments disabled
-      const result = performInitialScan(testDir, {
-        addComments: false,
-      })
-
-      // Verify scan results
-      expect(result.totalFiles).toBe(1)
-      expect(result.filesUpdated).toBe(1)
-
-      // Verify file was modified WITHOUT comment
-      const updatedContent = fs.readFileSync(usersFile, 'utf-8')
-      expect(updatedContent).toContain("url: '/users'")
-      expect(updatedContent).not.toContain('// Full URL:')
-    })
-  })
 })

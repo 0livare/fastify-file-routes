@@ -11,7 +11,6 @@ export function parseCliArgs() {
         version: {type: 'boolean', short: 'v'},
         verbose: {type: 'boolean'},
         root: {type: 'string', short: 'r'},
-        comment: {type: 'boolean', short: 'c', default: true},
       },
       strict: true,
       allowPositionals: false,

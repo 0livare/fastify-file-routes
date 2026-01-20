@@ -25,18 +25,18 @@ describe('synchronizeRouteFile', () => {
       const filePath = path.join(TEST_DIR, 'users.get.ts')
       const content = `
         fastify.route({
-          url: '/users',
+          url: '/api/users',
           method: 'GET',
           handler: async () => ({ users: [] })
         })
       `
       fs.writeFileSync(filePath, content)
 
-      const result = synchronizeRouteFile(filePath, '/users')
+      const result = synchronizeRouteFile(filePath, '/api/users')
 
       expect(result.modified).toBe(false)
-      expect(result.oldUrl).toBe('/users')
-      expect(result.newUrl).toBe('/users')
+      expect(result.oldUrl).toBe('/api/users')
+      expect(result.newUrl).toBe('/api/users')
       expect(result.error).toBeUndefined()
 
       // File content should be unchanged
@@ -75,16 +75,16 @@ describe('synchronizeRouteFile', () => {
 })`
       fs.writeFileSync(filePath, content)
 
-      const result = synchronizeRouteFile(filePath, '/users')
+      const result = synchronizeRouteFile(filePath, '/api/users')
 
       expect(result.modified).toBe(true)
       expect(result.oldUrl).toBe('/old-url')
-      expect(result.newUrl).toBe('/users')
+      expect(result.newUrl).toBe('/api/users')
       expect(result.error).toBeUndefined()
 
       // File content should be updated
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
-      expect(updatedContent).toContain("url: '/users'")
+      expect(updatedContent).toContain("url: '/api/users'")
       expect(updatedContent).not.toContain('/old-url')
     })
 
@@ -97,11 +97,11 @@ describe('synchronizeRouteFile', () => {
 })`
       fs.writeFileSync(filePath, content)
 
-      const result = synchronizeRouteFile(filePath, '/users')
+      const result = synchronizeRouteFile(filePath, '/api/users')
 
       expect(result.modified).toBe(true)
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
-      expect(updatedContent).toContain('url: "/users"')
+      expect(updatedContent).toContain('url: "/api/users"')
     })
 
     it('should update URL while preserving template literal style', () => {
@@ -109,11 +109,11 @@ describe('synchronizeRouteFile', () => {
       const content = 'fastify.route({\n  url: `/old-url`,\n  method: "GET"\n})'
       fs.writeFileSync(filePath, content)
 
-      const result = synchronizeRouteFile(filePath, '/users')
+      const result = synchronizeRouteFile(filePath, '/api/users')
 
       expect(result.modified).toBe(true)
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
-      expect(updatedContent).toContain('url: `/users`')
+      expect(updatedContent).toContain('url: `/api/users`')
     })
 
     it('should update URL while preserving formatting and comments', () => {
@@ -126,13 +126,13 @@ describe('synchronizeRouteFile', () => {
 })`
       fs.writeFileSync(filePath, content)
 
-      const result = synchronizeRouteFile(filePath, '/users')
+      const result = synchronizeRouteFile(filePath, '/api/users')
 
       expect(result.modified).toBe(true)
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
       expect(updatedContent).toContain('// User list endpoint')
       expect(updatedContent).toContain('// GET method')
-      expect(updatedContent).toContain("url: '/users'")
+      expect(updatedContent).toContain("url: '/api/users'")
     })
 
     it('should handle file with no current URL', () => {
@@ -143,7 +143,7 @@ describe('synchronizeRouteFile', () => {
 })`
       fs.writeFileSync(filePath, content)
 
-      const result = synchronizeRouteFile(filePath, '/users')
+      const result = synchronizeRouteFile(filePath, '/api/users')
 
       expect(result.modified).toBe(false)
       expect(result.oldUrl).toBeNull()
@@ -162,11 +162,11 @@ describe('synchronizeRouteFile', () => {
 })`
       fs.writeFileSync(filePath, content)
 
-      const result = synchronizeRouteFile(filePath, '/users')
+      const result = synchronizeRouteFile(filePath, '/api/users')
 
       expect(result.modified).toBe(true)
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
-      expect(updatedContent).toContain("url: '/users'")
+      expect(updatedContent).toContain("url: '/api/users'")
       expect(updatedContent).toContain('withTypeProvider')
     })
   })
@@ -175,7 +175,7 @@ describe('synchronizeRouteFile', () => {
     it('should handle non-existent file gracefully', () => {
       const filePath = path.join(TEST_DIR, 'nonexistent.get.ts')
 
-      const result = synchronizeRouteFile(filePath, '/users')
+      const result = synchronizeRouteFile(filePath, '/api/users')
 
       expect(result.modified).toBe(false)
       expect(result.error).toBeDefined()
@@ -190,7 +190,7 @@ describe('synchronizeRouteFile', () => {
       `
       fs.writeFileSync(filePath, content)
 
-      const result = synchronizeRouteFile(filePath, '/users')
+      const result = synchronizeRouteFile(filePath, '/api/users')
 
       expect(result.modified).toBe(false)
       expect(result.error).toContain('No valid fields found')
@@ -202,7 +202,7 @@ describe('synchronizeRouteFile', () => {
       fs.writeFileSync(filePath, content)
 
       // Should still parse despite syntax error
-      const result = synchronizeRouteFile(filePath, '/users')
+      const result = synchronizeRouteFile(filePath, '/api/users')
 
       expect(result.modified).toBe(true)
       expect(result.oldUrl).toBe('/test')
@@ -237,11 +237,11 @@ describe('synchronizeRouteFile', () => {
 })`
       fs.writeFileSync(filePath, content)
 
-      const result = synchronizeRouteFile(filePath, '/users')
+      const result = synchronizeRouteFile(filePath, '/api/users')
 
       expect(result.modified).toBe(true)
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
-      expect(updatedContent).toContain("url: '/users'")
+      expect(updatedContent).toContain("url: '/api/users'")
       expect(updatedContent).toContain('schema:')
       expect(updatedContent).toContain('handler:')
     })
@@ -257,14 +257,14 @@ describe('synchronizeRouteFile', () => {
 })`
       fs.writeFileSync(filePath, content)
 
-      const result = synchronizeRouteFile(filePath, '/users/:userId')
+      const result = synchronizeRouteFile(filePath, '/api/users/:userId')
 
       expect(result.modified).toBe(true)
       expect(result.oldUrl).toBe('/users/:id')
-      expect(result.newUrl).toBe('/users/:userId')
+      expect(result.newUrl).toBe('/api/users/:userId')
 
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
-      expect(updatedContent).toContain("url: '/users/:userId'")
+      expect(updatedContent).toContain("url: '/api/users/:userId'")
     })
   })
 
@@ -285,11 +285,11 @@ export default function(fastify: FastifyInstance) {
 }`
       fs.writeFileSync(filePath, content)
 
-      const result = synchronizeRouteFile(filePath, '/users')
+      const result = synchronizeRouteFile(filePath, '/api/users')
 
-      expect(result.modified).toBe(true)
+      expect(result.modified).toBe(false)
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
-      expect(updatedContent).toContain("url: '/users'")
+      expect(updatedContent).toContain("url: '/api/users'")
       expect(updatedContent).toContain('import')
       expect(updatedContent).toContain('export default')
     })
@@ -373,7 +373,7 @@ describe('synchronizeRoutes', () => {
     const file2 = path.join(TEST_DIR, 'posts.get.ts')
     fs.writeFileSync(
       file2,
-      `fastify.route({ url: '/posts', method: 'GET', handler: async () => ({}) })`,
+      `fastify.route({ url: '/api/posts', method: 'GET', handler: async () => ({}) })`,
     )
 
     // File 3: needs update
@@ -384,9 +384,9 @@ describe('synchronizeRoutes', () => {
     )
 
     const fileUrlMap = new Map([
-      [file1, '/users'],
-      [file2, '/posts'],
-      [file3, '/comments'],
+      [file1, '/api/users'],
+      [file2, '/api/posts'],
+      [file3, '/api/comments'],
     ])
 
     const summary = synchronizeRoutes(fileUrlMap)
@@ -398,9 +398,9 @@ describe('synchronizeRoutes', () => {
     expect(summary.results).toHaveLength(3)
 
     // Verify files were updated correctly
-    expect(fs.readFileSync(file1, 'utf-8')).toContain('/users')
-    expect(fs.readFileSync(file2, 'utf-8')).toContain('/posts')
-    expect(fs.readFileSync(file3, 'utf-8')).toContain('/comments')
+    expect(fs.readFileSync(file1, 'utf-8')).toContain('/api/users')
+    expect(fs.readFileSync(file2, 'utf-8')).toContain('/api/posts')
+    expect(fs.readFileSync(file3, 'utf-8')).toContain('/api/comments')
   })
 
   it('should handle errors gracefully and continue processing', () => {
@@ -422,9 +422,9 @@ describe('synchronizeRoutes', () => {
     )
 
     const fileUrlMap = new Map([
-      [file1, '/users'],
-      [file2, '/missing'],
-      [file3, '/posts'],
+      [file1, '/api/users'],
+      [file2, '/api/missing'],
+      [file3, '/api/posts'],
     ])
 
     const summary = synchronizeRoutes(fileUrlMap)
@@ -436,8 +436,8 @@ describe('synchronizeRoutes', () => {
     expect(summary.results).toHaveLength(3)
 
     // Check that valid files were still updated
-    expect(fs.readFileSync(file1, 'utf-8')).toContain('/users')
-    expect(fs.readFileSync(file3, 'utf-8')).toContain('/posts')
+    expect(fs.readFileSync(file1, 'utf-8')).toContain('/api/users')
+    expect(fs.readFileSync(file3, 'utf-8')).toContain('/api/posts')
 
     // Check that error was recorded
     const errorResult = summary.results.find((r) => r.filePath === file2)
@@ -457,8 +457,8 @@ describe('synchronizeRoutes', () => {
     fs.writeFileSync(file2, `const x = 42;`)
 
     const fileUrlMap = new Map([
-      [file1, '/users'],
-      [file2, '/invalid'],
+      [file1, '/api/users'],
+      [file2, '/api/invalid'],
     ])
 
     const summary = synchronizeRoutes(fileUrlMap)
@@ -469,7 +469,7 @@ describe('synchronizeRoutes', () => {
     expect(summary.errors).toBe(1)
 
     // Valid file should be updated
-    expect(fs.readFileSync(file1, 'utf-8')).toContain('/users')
+    expect(fs.readFileSync(file1, 'utf-8')).toContain('/api/users')
   })
 
   it('should provide detailed results for each file', () => {
@@ -486,8 +486,8 @@ describe('synchronizeRoutes', () => {
     )
 
     const fileUrlMap = new Map([
-      [file1, '/users'],
-      [file2, '/posts'],
+      [file1, '/api/users'],
+      [file2, '/api/posts'],
     ])
 
     const summary = synchronizeRoutes(fileUrlMap)
@@ -497,15 +497,15 @@ describe('synchronizeRoutes', () => {
     expect(result1).toBeDefined()
     expect(result1?.modified).toBe(true)
     expect(result1?.oldUrl).toBe('/old')
-    expect(result1?.newUrl).toBe('/users')
+    expect(result1?.newUrl).toBe('/api/users')
     expect(result1?.error).toBeUndefined()
 
-    // Check result for skipped file
+    // Check result for modified file
     const result2 = summary.results.find((r) => r.filePath === file2)
     expect(result2).toBeDefined()
-    expect(result2?.modified).toBe(false)
+    expect(result2?.modified).toBe(true)
     expect(result2?.oldUrl).toBe('/posts')
-    expect(result2?.newUrl).toBe('/posts')
+    expect(result2?.newUrl).toBe('/api/posts')
     expect(result2?.error).toBeUndefined()
   })
 
@@ -519,7 +519,7 @@ describe('synchronizeRoutes', () => {
         filePath,
         `fastify.route({ url: '/old${i}', method: 'GET', handler: async () => ({}) })`,
       )
-      fileUrlMap.set(filePath, `/route${i}`)
+      fileUrlMap.set(filePath, `/api/route${i}`)
     }
 
     const summary = synchronizeRoutes(fileUrlMap)
@@ -534,7 +534,7 @@ describe('synchronizeRoutes', () => {
     for (let i = 0; i < 20; i++) {
       const filePath = path.join(TEST_DIR, `route${i}.get.ts`)
       const content = fs.readFileSync(filePath, 'utf-8')
-      expect(content).toContain(`/route${i}`)
+      expect(content).toContain(`/api/route${i}`)
       expect(content).not.toContain(`/old${i}`)
     }
   })

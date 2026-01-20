@@ -32,13 +32,13 @@ describe('detectAndResolveConflicts', () => {
         {
           filePath: '/api/users.get.ts',
           method: 'GET',
-          url: '/users',
+          url: '/api/users',
         },
       ]
       const result = detectAndResolveConflicts(routes)
 
       expect(result.conflicts).toEqual([])
-      expect(result.fileUrlMap.get('/api/users.get.ts')).toBe('/users')
+      expect(result.fileUrlMap.get('/api/users.get.ts')).toBe('/api/users')
       expect(consoleWarnSpy).not.toHaveBeenCalled()
     })
 
@@ -47,25 +47,25 @@ describe('detectAndResolveConflicts', () => {
         {
           filePath: '/api/users.get.ts',
           method: 'GET',
-          url: '/users',
+          url: '/api/users',
         },
         {
           filePath: '/api/posts.get.ts',
           method: 'GET',
-          url: '/posts',
+          url: '/api/posts',
         },
         {
           filePath: '/api/comments.get.ts',
           method: 'GET',
-          url: '/comments',
+          url: '/api/comments',
         },
       ]
       const result = detectAndResolveConflicts(routes)
 
       expect(result.conflicts).toEqual([])
-      expect(result.fileUrlMap.get('/api/users.get.ts')).toBe('/users')
-      expect(result.fileUrlMap.get('/api/posts.get.ts')).toBe('/posts')
-      expect(result.fileUrlMap.get('/api/comments.get.ts')).toBe('/comments')
+      expect(result.fileUrlMap.get('/api/users.get.ts')).toBe('/api/users')
+      expect(result.fileUrlMap.get('/api/posts.get.ts')).toBe('/api/posts')
+      expect(result.fileUrlMap.get('/api/comments.get.ts')).toBe('/api/comments')
       expect(consoleWarnSpy).not.toHaveBeenCalled()
     })
   })
@@ -76,29 +76,29 @@ describe('detectAndResolveConflicts', () => {
         {
           filePath: '/api/users/$userId.get.ts',
           method: 'GET',
-          url: '/users/:userId',
+          url: '/api/users/:userId',
         },
         {
           filePath: '/api/users/$id.get.ts',
           method: 'GET',
-          url: '/users/:userId',
+          url: '/api/users/:userId',
         },
       ]
       const result = detectAndResolveConflicts(routes)
 
       expect(result.conflicts).toHaveLength(1)
       expect(result.conflicts[0]).toEqual({
-        url: '/users/:userId',
+        url: '/api/users/:userId',
         files: ['/api/users/$userId.get.ts', '/api/users/$id.get.ts'],
       })
 
       // First file keeps original URL
       expect(result.fileUrlMap.get('/api/users/$userId.get.ts')).toBe(
-        '/users/:userId',
+        '/api/users/:userId',
       )
       // Second file gets -2 suffix
       expect(result.fileUrlMap.get('/api/users/$id.get.ts')).toBe(
-        '/users/:userId-2',
+        '/api/users/:userId-2',
       )
 
       expect(consoleWarnSpy).toHaveBeenCalledTimes(3)
@@ -109,19 +109,19 @@ describe('detectAndResolveConflicts', () => {
         {
           filePath: '/api/index.get.ts',
           method: 'GET',
-          url: '/',
+          url: '/api',
         },
         {
           filePath: '/api/home.get.ts',
           method: 'GET',
-          url: '/',
+          url: '/api',
         },
       ]
       const result = detectAndResolveConflicts(routes)
 
       expect(result.conflicts).toHaveLength(1)
-      expect(result.fileUrlMap.get('/api/index.get.ts')).toBe('/')
-      expect(result.fileUrlMap.get('/api/home.get.ts')).toBe('/-2')
+      expect(result.fileUrlMap.get('/api/index.get.ts')).toBe('/api')
+      expect(result.fileUrlMap.get('/api/home.get.ts')).toBe('/api-2')
     })
   })
 
@@ -131,17 +131,17 @@ describe('detectAndResolveConflicts', () => {
         {
           filePath: '/api/users/$userId.get.ts',
           method: 'GET',
-          url: '/users/:userId',
+          url: '/api/users/:userId',
         },
         {
           filePath: '/api/users/$id.get.ts',
           method: 'GET',
-          url: '/users/:userId',
+          url: '/api/users/:userId',
         },
         {
           filePath: '/api/users/$uid.get.ts',
           method: 'GET',
-          url: '/users/:userId',
+          url: '/api/users/:userId',
         },
       ]
       const result = detectAndResolveConflicts(routes)
@@ -151,32 +151,32 @@ describe('detectAndResolveConflicts', () => {
 
       // First file keeps original URL
       expect(result.fileUrlMap.get('/api/users/$userId.get.ts')).toBe(
-        '/users/:userId',
+        '/api/users/:userId',
       )
       // Second file gets -2 suffix
       expect(result.fileUrlMap.get('/api/users/$id.get.ts')).toBe(
-        '/users/:userId-2',
+        '/api/users/:userId-2',
       )
       // Third file gets -3 suffix
       expect(result.fileUrlMap.get('/api/users/$uid.get.ts')).toBe(
-        '/users/:userId-3',
+        '/api/users/:userId-3',
       )
     })
 
     it('should resolve four-way conflict', () => {
       const routes: RouteFileMetadata[] = [
-        {filePath: '/api/a.get.ts', method: 'GET', url: '/test'},
-        {filePath: '/api/b.get.ts', method: 'GET', url: '/test'},
-        {filePath: '/api/c.get.ts', method: 'GET', url: '/test'},
-        {filePath: '/api/d.get.ts', method: 'GET', url: '/test'},
+        {filePath: '/api/a.get.ts', method: 'GET', url: '/api/test'},
+        {filePath: '/api/b.get.ts', method: 'GET', url: '/api/test'},
+        {filePath: '/api/c.get.ts', method: 'GET', url: '/api/test'},
+        {filePath: '/api/d.get.ts', method: 'GET', url: '/api/test'},
       ]
       const result = detectAndResolveConflicts(routes)
 
       expect(result.conflicts).toHaveLength(1)
-      expect(result.fileUrlMap.get('/api/a.get.ts')).toBe('/test')
-      expect(result.fileUrlMap.get('/api/b.get.ts')).toBe('/test-2')
-      expect(result.fileUrlMap.get('/api/c.get.ts')).toBe('/test-3')
-      expect(result.fileUrlMap.get('/api/d.get.ts')).toBe('/test-4')
+      expect(result.fileUrlMap.get('/api/a.get.ts')).toBe('/api/test')
+      expect(result.fileUrlMap.get('/api/b.get.ts')).toBe('/api/test-2')
+      expect(result.fileUrlMap.get('/api/c.get.ts')).toBe('/api/test-3')
+      expect(result.fileUrlMap.get('/api/d.get.ts')).toBe('/api/test-4')
     })
   })
 
@@ -187,29 +187,29 @@ describe('detectAndResolveConflicts', () => {
         {
           filePath: '/api/users/$userId.get.ts',
           method: 'GET',
-          url: '/users/:userId',
+          url: '/api/users/:userId',
         },
         {
           filePath: '/api/users/$id.get.ts',
           method: 'GET',
-          url: '/users/:userId',
+          url: '/api/users/:userId',
         },
         // Conflict group 2: /posts/:postId
         {
           filePath: '/api/posts/$postId.get.ts',
           method: 'GET',
-          url: '/posts/:postId',
+          url: '/api/posts/:postId',
         },
         {
           filePath: '/api/posts/$id.get.ts',
           method: 'GET',
-          url: '/posts/:postId',
+          url: '/api/posts/:postId',
         },
         // No conflict
         {
           filePath: '/api/comments.get.ts',
           method: 'GET',
-          url: '/comments',
+          url: '/api/comments',
         },
       ]
       const result = detectAndResolveConflicts(routes)
@@ -218,44 +218,44 @@ describe('detectAndResolveConflicts', () => {
 
       // Verify first conflict group
       const usersConflict = result.conflicts.find(
-        (c) => c.url === '/users/:userId',
+        (c) => c.url === '/api/users/:userId',
       )
       expect(usersConflict).toBeDefined()
       expect(usersConflict?.files).toHaveLength(2)
 
       // Verify second conflict group
       const postsConflict = result.conflicts.find(
-        (c) => c.url === '/posts/:postId',
+        (c) => c.url === '/api/posts/:postId',
       )
       expect(postsConflict).toBeDefined()
       expect(postsConflict?.files).toHaveLength(2)
 
       // Verify mappings
       expect(result.fileUrlMap.get('/api/users/$userId.get.ts')).toBe(
-        '/users/:userId',
+        '/api/users/:userId',
       )
       expect(result.fileUrlMap.get('/api/users/$id.get.ts')).toBe(
-        '/users/:userId-2',
+        '/api/users/:userId-2',
       )
       expect(result.fileUrlMap.get('/api/posts/$postId.get.ts')).toBe(
-        '/posts/:postId',
+        '/api/posts/:postId',
       )
       expect(result.fileUrlMap.get('/api/posts/$id.get.ts')).toBe(
-        '/posts/:postId-2',
+        '/api/posts/:postId-2',
       )
-      expect(result.fileUrlMap.get('/api/comments.get.ts')).toBe('/comments')
+      expect(result.fileUrlMap.get('/api/comments.get.ts')).toBe('/api/comments')
     })
 
     it('should handle mix of conflicts and non-conflicts', () => {
       const routes: RouteFileMetadata[] = [
-        {filePath: '/api/a.get.ts', method: 'GET', url: '/a'},
-        {filePath: '/api/b1.get.ts', method: 'GET', url: '/b'},
-        {filePath: '/api/b2.get.ts', method: 'GET', url: '/b'},
-        {filePath: '/api/c.get.ts', method: 'GET', url: '/c'},
-        {filePath: '/api/d1.get.ts', method: 'GET', url: '/d'},
-        {filePath: '/api/d2.get.ts', method: 'GET', url: '/d'},
-        {filePath: '/api/d3.get.ts', method: 'GET', url: '/d'},
-        {filePath: '/api/e.get.ts', method: 'GET', url: '/e'},
+        {filePath: '/api/a.get.ts', method: 'GET', url: '/api/a'},
+        {filePath: '/api/b1.get.ts', method: 'GET', url: '/api/b'},
+        {filePath: '/api/b2.get.ts', method: 'GET', url: '/api/b'},
+        {filePath: '/api/c.get.ts', method: 'GET', url: '/api/c'},
+        {filePath: '/api/d1.get.ts', method: 'GET', url: '/api/d'},
+        {filePath: '/api/d2.get.ts', method: 'GET', url: '/api/d'},
+        {filePath: '/api/d3.get.ts', method: 'GET', url: '/api/d'},
+        {filePath: '/api/e.get.ts', method: 'GET', url: '/api/e'},
       ]
       const result = detectAndResolveConflicts(routes)
 
@@ -263,18 +263,18 @@ describe('detectAndResolveConflicts', () => {
       expect(result.fileUrlMap.size).toBe(8)
 
       // No conflicts
-      expect(result.fileUrlMap.get('/api/a.get.ts')).toBe('/a')
-      expect(result.fileUrlMap.get('/api/c.get.ts')).toBe('/c')
-      expect(result.fileUrlMap.get('/api/e.get.ts')).toBe('/e')
+      expect(result.fileUrlMap.get('/api/a.get.ts')).toBe('/api/a')
+      expect(result.fileUrlMap.get('/api/c.get.ts')).toBe('/api/c')
+      expect(result.fileUrlMap.get('/api/e.get.ts')).toBe('/api/e')
 
       // Two-way conflict on /b
-      expect(result.fileUrlMap.get('/api/b1.get.ts')).toBe('/b')
-      expect(result.fileUrlMap.get('/api/b2.get.ts')).toBe('/b-2')
+      expect(result.fileUrlMap.get('/api/b1.get.ts')).toBe('/api/b')
+      expect(result.fileUrlMap.get('/api/b2.get.ts')).toBe('/api/b-2')
 
       // Three-way conflict on /d
-      expect(result.fileUrlMap.get('/api/d1.get.ts')).toBe('/d')
-      expect(result.fileUrlMap.get('/api/d2.get.ts')).toBe('/d-2')
-      expect(result.fileUrlMap.get('/api/d3.get.ts')).toBe('/d-3')
+      expect(result.fileUrlMap.get('/api/d1.get.ts')).toBe('/api/d')
+      expect(result.fileUrlMap.get('/api/d2.get.ts')).toBe('/api/d-2')
+      expect(result.fileUrlMap.get('/api/d3.get.ts')).toBe('/api/d-3')
     })
   })
 
@@ -284,22 +284,22 @@ describe('detectAndResolveConflicts', () => {
         {
           filePath: '/api/users/$userId/posts.get.ts',
           method: 'GET',
-          url: '/users/:userId/posts',
+          url: '/api/users/:userId/posts',
         },
         {
           filePath: '/api/users/$id/posts.get.ts',
           method: 'GET',
-          url: '/users/:userId/posts',
+          url: '/api/users/:userId/posts',
         },
       ]
       const result = detectAndResolveConflicts(routes)
 
       expect(result.conflicts).toHaveLength(1)
       expect(result.fileUrlMap.get('/api/users/$userId/posts.get.ts')).toBe(
-        '/users/:userId/posts',
+        '/api/users/:userId/posts',
       )
       expect(result.fileUrlMap.get('/api/users/$id/posts.get.ts')).toBe(
-        '/users/:userId/posts-2',
+        '/api/users/:userId/posts-2',
       )
     })
 
@@ -308,12 +308,12 @@ describe('detectAndResolveConflicts', () => {
         {
           filePath: '/api/users/$userId/posts/$postId.get.ts',
           method: 'GET',
-          url: '/users/:userId/posts/:postId',
+          url: '/api/users/:userId/posts/:postId',
         },
         {
           filePath: '/api/users/$uid/posts/$pid.get.ts',
           method: 'GET',
-          url: '/users/:userId/posts/:postId',
+          url: '/api/users/:userId/posts/:postId',
         },
       ]
       const result = detectAndResolveConflicts(routes)
@@ -321,9 +321,9 @@ describe('detectAndResolveConflicts', () => {
       expect(result.conflicts).toHaveLength(1)
       expect(
         result.fileUrlMap.get('/api/users/$userId/posts/$postId.get.ts'),
-      ).toBe('/users/:userId/posts/:postId')
+      ).toBe('/api/users/:userId/posts/:postId')
       expect(result.fileUrlMap.get('/api/users/$uid/posts/$pid.get.ts')).toBe(
-        '/users/:userId/posts/:postId-2',
+        '/api/users/:userId/posts/:postId-2',
       )
     })
 
@@ -332,20 +332,20 @@ describe('detectAndResolveConflicts', () => {
         {
           filePath: '/api/search.get.ts',
           method: 'GET',
-          url: '/search',
+          url: '/api/search',
         },
         {
           filePath: '/api/search-results.get.ts',
           method: 'GET',
-          url: '/search',
+          url: '/api/search',
         },
       ]
       const result = detectAndResolveConflicts(routes)
 
       expect(result.conflicts).toHaveLength(1)
-      expect(result.fileUrlMap.get('/api/search.get.ts')).toBe('/search')
+      expect(result.fileUrlMap.get('/api/search.get.ts')).toBe('/api/search')
       expect(result.fileUrlMap.get('/api/search-results.get.ts')).toBe(
-        '/search-2',
+        '/api/search-2',
       )
     })
   })
@@ -356,33 +356,33 @@ describe('detectAndResolveConflicts', () => {
         {
           filePath: '/api/users/$userId.get.ts',
           method: 'GET',
-          url: '/users/:userId',
+          url: '/api/users/:userId',
         },
         {
           filePath: '/api/users/$id.get.ts',
           method: 'GET',
-          url: '/users/:userId',
+          url: '/api/users/:userId',
         },
       ]
       detectAndResolveConflicts(routes)
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        '⚠️  Conflict detected: 2 files map to /users/:userId',
+        '⚠️  Conflict detected: 2 files map to /api/users/:userId',
       )
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        '   → /api/users/$userId.get.ts (kept as /users/:userId)',
+        '   → /api/users/$userId.get.ts (kept as /api/users/:userId)',
       )
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        '   → /api/users/$id.get.ts (renamed to /users/:userId-2)',
+        '   → /api/users/$id.get.ts (renamed to /api/users/:userId-2)',
       )
     })
 
     it('should log warnings for multiple conflicts', () => {
       const routes: RouteFileMetadata[] = [
-        {filePath: '/api/a1.get.ts', method: 'GET', url: '/a'},
-        {filePath: '/api/a2.get.ts', method: 'GET', url: '/a'},
-        {filePath: '/api/b1.get.ts', method: 'GET', url: '/b'},
-        {filePath: '/api/b2.get.ts', method: 'GET', url: '/b'},
+        {filePath: '/api/a1.get.ts', method: 'GET', url: '/api/a'},
+        {filePath: '/api/a2.get.ts', method: 'GET', url: '/api/a'},
+        {filePath: '/api/b1.get.ts', method: 'GET', url: '/api/b'},
+        {filePath: '/api/b2.get.ts', method: 'GET', url: '/api/b'},
       ]
       detectAndResolveConflicts(routes)
 
@@ -395,7 +395,7 @@ describe('detectAndResolveConflicts', () => {
 
     it('should not log warnings when no conflicts', () => {
       const routes: RouteFileMetadata[] = [
-        {filePath: '/api/a.get.ts', method: 'GET', url: '/a'},
+        {filePath: '/api/a.get.ts', method: 'GET', url: '/api/a'},
         {filePath: '/api/b.get.ts', method: 'GET', url: '/b'},
       ]
       detectAndResolveConflicts(routes)
@@ -407,7 +407,7 @@ describe('detectAndResolveConflicts', () => {
   describe('Return value structure', () => {
     it('should return correct structure with fileUrlMap and conflicts', () => {
       const routes: RouteFileMetadata[] = [
-        {filePath: '/api/test.get.ts', method: 'GET', url: '/test'},
+        {filePath: '/api/test.get.ts', method: 'GET', url: '/api/test'},
       ]
       const result = detectAndResolveConflicts(routes)
 
@@ -419,7 +419,7 @@ describe('detectAndResolveConflicts', () => {
 
     it('should include all files in fileUrlMap', () => {
       const routes: RouteFileMetadata[] = [
-        {filePath: '/api/a.get.ts', method: 'GET', url: '/a'},
+        {filePath: '/api/a.get.ts', method: 'GET', url: '/api/a'},
         {filePath: '/api/b.get.ts', method: 'GET', url: '/b'},
         {filePath: '/api/c1.get.ts', method: 'GET', url: '/c'},
         {filePath: '/api/c2.get.ts', method: 'GET', url: '/c'},
@@ -435,15 +435,15 @@ describe('detectAndResolveConflicts', () => {
 
     it('should include correct conflict info', () => {
       const routes: RouteFileMetadata[] = [
-        {filePath: '/api/x1.get.ts', method: 'GET', url: '/x'},
-        {filePath: '/api/x2.get.ts', method: 'GET', url: '/x'},
+        {filePath: '/api/x1.get.ts', method: 'GET', url: '/api/x'},
+        {filePath: '/api/x2.get.ts', method: 'GET', url: '/api/x'},
       ]
       const result = detectAndResolveConflicts(routes)
 
       expect(result.conflicts).toHaveLength(1)
       expect(result.conflicts[0]).toHaveProperty('url')
       expect(result.conflicts[0]).toHaveProperty('files')
-      expect(result.conflicts[0].url).toBe('/x')
+      expect(result.conflicts[0].url).toBe('/api/x')
       expect(result.conflicts[0].files).toEqual([
         '/api/x1.get.ts',
         '/api/x2.get.ts',
@@ -457,26 +457,26 @@ describe('detectAndResolveConflicts', () => {
         {
           filePath: '/api/test-2.get.ts',
           method: 'GET',
-          url: '/test-2',
+          url: '/api/test-2',
         },
         {
           filePath: '/api/test-2-alt.get.ts',
           method: 'GET',
-          url: '/test-2',
+          url: '/api/test-2',
         },
       ]
       const result = detectAndResolveConflicts(routes)
 
       expect(result.conflicts).toHaveLength(1)
-      expect(result.fileUrlMap.get('/api/test-2.get.ts')).toBe('/test-2')
-      expect(result.fileUrlMap.get('/api/test-2-alt.get.ts')).toBe('/test-2-2')
+      expect(result.fileUrlMap.get('/api/test-2.get.ts')).toBe('/api/test-2')
+      expect(result.fileUrlMap.get('/api/test-2-alt.get.ts')).toBe('/api/test-2-2')
     })
 
     it('should preserve order of files in conflict info', () => {
       const routes: RouteFileMetadata[] = [
-        {filePath: '/api/first.get.ts', method: 'GET', url: '/test'},
-        {filePath: '/api/second.get.ts', method: 'GET', url: '/test'},
-        {filePath: '/api/third.get.ts', method: 'GET', url: '/test'},
+        {filePath: '/api/first.get.ts', method: 'GET', url: '/api/test'},
+        {filePath: '/api/second.get.ts', method: 'GET', url: '/api/test'},
+        {filePath: '/api/third.get.ts', method: 'GET', url: '/api/test'},
       ]
       const result = detectAndResolveConflicts(routes)
 
@@ -506,22 +506,22 @@ describe('detectAndResolveConflicts', () => {
         {
           filePath: '/api/users-list.get.ts',
           method: 'GET',
-          url: '/users-list',
+          url: '/api/users-list',
         },
         {
           filePath: '/api/users_list.get.ts',
           method: 'GET',
-          url: '/users-list',
+          url: '/api/users-list',
         },
       ]
       const result = detectAndResolveConflicts(routes)
 
       expect(result.conflicts).toHaveLength(1)
       expect(result.fileUrlMap.get('/api/users-list.get.ts')).toBe(
-        '/users-list',
+        '/api/users-list',
       )
       expect(result.fileUrlMap.get('/api/users_list.get.ts')).toBe(
-        '/users-list-2',
+        '/api/users-list-2',
       )
     })
   })

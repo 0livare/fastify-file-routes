@@ -1,10 +1,18 @@
 # Fastify Sync CLI
 
-With [@fastify/autoload] and a good naming convention, you can _almost_ achieve file-based routing in Fastify. But you still have the issue of keeping your route `url` in sync with your file path.
-
 This CLI tool watches your API route files and automatically keeps the `url` and `method` fields in your Fastify route configuration in sync with the file path.
 
-It also establishes a fully-featured naming convention similar to [Tanstack Router](https://tanstack.com/router/v1/docs/framework/react/routing/file-based-routing):
+It provides a fully-featured file-based routing convention for Fastify, handling:
+
+- Multiple endpoints for the same resource (e.g., `GET /users/:id` and `PATCH /users/:id`)
+- Route parameters (e.g., `:userId`)
+- Index routes (e.g., `/users` from `src/api/users/index.get.ts`)
+- Pathless layouts - grouping routes in folders that don't appear in URLs
+- Automatic synchronization between filenames and route URLs
+
+## Naming Convention
+
+The tool establishes a naming convention similar to [Tanstack Router](https://tanstack.com/router/v1/docs/framework/react/routing/file-based-routing):
 
 | File Name                         | URL                         | Note                                                                             |
 | --------------------------------- | --------------------------- | -------------------------------------------------------------------------------- |
@@ -14,20 +22,6 @@ It also establishes a fully-featured naming convention similar to [Tanstack Rout
 | `src/api/_auth/login.post.ts`     | `POST /api/login`           | Files/folders starting with `_` are excluded from URL                            |
 | `src/api/files/index.get.ts`      | `GET /api/files`            | `index.verb` files map to parent path                                            |
 
-> [!NOTE]
-> It is recommended to configure `@fastify/autoload` with the initial `/api` prefix so that your routes match your file structure exactly, but that is not required. If it's missing, the previous exmples should remove `/api` from the beginning of the URLs.
->
-> ```ts
-> fastify.register(autoLoad, {
->   dir: path.join(import.meta.dirname, 'api'),
->   options: {prefix: '/api'},
-> })
-> ```
-
-> [!important]
->
-> `@fastify/autoload` has a [restriction](https://github.com/fastify/fastify-autoload?tab=readme-ov-file#dir-required) where if a directory contains an `index.ts/js` file, it will only load that file and ignore other files in the same directory. So this tool inherits that same limitation. However that restriction does not apply to `index.verb.ts/js` files.
-
 ## Features
 
 - **Zero Configuration**: Works out of the box with sensible defaults
@@ -35,15 +29,6 @@ It also establishes a fully-featured naming convention similar to [Tanstack Rout
 - **Safe Modifications**: Preserves code formatting, indentation, comments, and quote styles
 - **Conflict Detection**: Automatically resolves URL conflicts with clear warnings
 - **Graceful Shutdown**: Clean exit on Ctrl+C
-
-## Requirements
-
-1. [Bun](https://bun.sh) is installed
-2. [@fastify/autoload] is used to load routes
-3. Define your routes inside of the `src/api` directory
-4. Your routes are defined with `fastify.route()`, not the shorthand methods like `fastify.get()` or `fastify.post()`
-
-[@fastify/autoload]: https://github.com/fastify/fastify-autoload
 
 ## Installation
 
@@ -56,19 +41,57 @@ npm i -g fastify-sync
 
 ## Usage
 
-Run the `fastify-sync` command from your project root to watch your API routes:
+1. Make sure **Fastify Sync** can find your root server file.
+   - By default it looks in `src/server`, `src/main`, and `src/index`.
+   - If your file is elsewhere, use the `--root` or `-r` flag to specify its path.
+1. Define your routes in the `src/api` directory using `fastify.route()` (not the shorthand methods).
+   ```js
+   fastify.route({
+     method: 'GET',
+     url: '/api/health',
+   })
+   ```
+   - The [zod](https://github.com/turkerdev/fastify-type-provider-zod) and [zod openapi](https://github.com/samchungy/fastify-zod-openapi) type providers are also supported:
+     ```ts
+     fastify.withTypeProvider<FastifyZodOpenApiTypeProvider>().route({
+       method: 'GET',
+       url: '/api/health',
+     })
+     ```
+1. Configure [@fastify/autoload]
+   ```js
+   fastify.register(autoLoad, {
+     // 1. Look for routes in the `src/api` directory
+     dir: path.join(import.meta.dirname, 'api'),
+     options: {
+       // 2. Prefix all routes with /api
+       prefix: '/api',
+       // 3. Do not implicitly use the directory name as part of the route prefix
+       // (Fastify Sync will explicitly set the full URL in each route file)
+       dirNameRoutePrefix: false,
+     },
+   })
+   ```
+1. Run the `fastify-sync` command from your project root to watch your API routes:
 
-```bash
-fastify-sync
-```
+   ```bash
+   fastify-sync
+   ```
 
-Commonly, you'll want Fastify Sync to run alongside your fastify server in dev mode. You can append it to your existing `dev` script with [concurrently](https://www.npmjs.com/package/concurrently):
+   Commonly, you'll want Fastify Sync to run alongside your fastify server in dev mode. You can append it to your existing `dev` script with [concurrently](https://www.npmjs.com/package/concurrently):
 
-```json
-"dev": "concurrently --raw 'tsx --watch src/server.ts | pino-pretty' 'fastify-sync'",
-```
+   ```json
+   "dev": "concurrently --raw 'tsx --watch src/server.ts | pino-pretty' 'fastify-sync'",
+   ```
 
-The CLI will:
+1. Try it out!
+   - Create a new file at `src/api/users/$userId.post.ts` see it get automatically bootstrapped
+   - Edit the file name to end in `.get.ts` and see the method update
+   - You can now access this route at `/api/users/123`.
+
+[@fastify/autoload]: https://github.com/fastify/fastify-autoload
+
+On startup, **Fastify Sync** will:
 
 1. Perform an initial scan of all routes in `src/api`
 2. Fix any URLs that don't match their file paths
@@ -80,11 +103,6 @@ The CLI will:
 - `--version`, `-v`: Show version number
 - `--verbose`: Show detailed output during operation (by default, the CLI runs quietly)
 
-```bash
-# Run with verbose output
-fastify-sync --verbose
-```
-
 ## How it works
 
 The tool follows file-based routing conventions to automatically generate URLs from file paths:
@@ -92,17 +110,17 @@ The tool follows file-based routing conventions to automatically generate URLs f
 ### Route Parameter Syntax
 
 - `$userId` or `.$userId` → `:userId` in URL
-- Example: `src/api/users/$userId.get.ts` → `/users/:userId`
+- Example: `src/api/users/$userId.get.ts` → `/api/users/:userId`
 
 ### Index Files
 
 - `index.get.ts` maps to parent path
-- Example: `src/api/users/index.get.ts` → `/users`
+- Example: `src/api/users/index.get.ts` → `/api/users`
 
 ### Pathless Layouts
 
 - Files/folders starting with `_` are excluded from URL
-- Example: `src/api/_auth/login.post.ts` → `/login`
+- Example: `src/api/_auth/login.post.ts` → `/api/login`
 
 ### HTTP Methods
 
@@ -114,16 +132,18 @@ The tool follows file-based routing conventions to automatically generate URLs f
 ```
 src/api/
 ├── users/
-│   ├── index.get.ts           → GET /users
-│   ├── $userId.get.ts         → GET /users/:userId
-│   └── $userId.patch.ts       → PATCH /users/:userId
+│   ├── index.get.ts           → GET /api/users
+│   ├── $userId.get.ts         → GET /api/users/:userId
+│   └── $userId.patch.ts       → PATCH /api/users/:userId
 ├── products/
-│   ├── index.get.ts          → GET /products
+│   ├── index.get.ts          → GET /api/products
 │   └── $id/
-│       └── reviews.get.ts    → GET /products/:id/reviews
+│       └── reviews.get.ts    → GET /api/products/:id/reviews
 └── _auth/
-    └── login.post.ts         → POST /login
+    └── login.post.ts         → POST /api/login
 ```
+
+Note: Each route file's `url` field will contain the full path shown above (e.g., `/api/users/:userId`), not a relative path.
 
 ## Conflict Resolution
 

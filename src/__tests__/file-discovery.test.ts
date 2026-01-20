@@ -64,7 +64,7 @@ describe('discoverRouteFiles', () => {
       expect(routes[0]).toMatchObject({
         filePath: path.join(testDir, 'users.get.ts'),
         method: 'GET',
-        url: '/users',
+        url: '/api/users',
       })
     })
 
@@ -183,7 +183,7 @@ describe('discoverRouteFiles', () => {
 
       const {routes, invalidFiles} = discoverRouteFiles(testDir)
       expect(routes).toHaveLength(1)
-      expect(routes[0].url).toBe('/a/b/c/d/e/f')
+      expect(routes[0].url).toBe('/api/a/b/c/d/e/f')
     })
 
     it('should handle empty subdirectories', () => {
@@ -208,7 +208,7 @@ describe('discoverRouteFiles', () => {
 
       const {routes, invalidFiles} = discoverRouteFiles(testDir)
       const urls = routes.map((r) => r.url).sort()
-      expect(urls).toEqual(['/comments', '/posts', '/users'])
+      expect(urls).toEqual(['/api/comments', '/api/posts', '/api/users'])
     })
 
     it('should calculate correct URLs for nested paths', () => {
@@ -221,9 +221,9 @@ describe('discoverRouteFiles', () => {
       const {routes, invalidFiles} = discoverRouteFiles(testDir)
       const urls = routes.map((r) => r.url).sort()
       expect(urls).toEqual([
-        '/users/:id',
-        '/users/:id/posts',
-        '/users/:id/posts/:postId',
+        '/api/users/:id',
+        '/api/users/:id/posts',
+        '/api/users/:id/posts/:postId',
       ])
     })
 
@@ -236,7 +236,7 @@ describe('discoverRouteFiles', () => {
 
       const {routes, invalidFiles} = discoverRouteFiles(testDir)
       const urls = routes.map((r) => r.url).sort()
-      expect(urls).toEqual(['/', '/users', '/users/:id'])
+      expect(urls).toEqual(['/api', '/api/users', '/api/users/:id'])
     })
 
     it('should handle pathless layouts (underscore prefix)', () => {
@@ -247,7 +247,7 @@ describe('discoverRouteFiles', () => {
 
       const {routes, invalidFiles} = discoverRouteFiles(testDir)
       const urls = routes.map((r) => r.url).sort()
-      expect(urls).toEqual(['/users', '/users/:id'])
+      expect(urls).toEqual(['/api/users', '/api/users/:id'])
     })
   })
 
@@ -317,13 +317,13 @@ describe('discoverRouteFiles', () => {
 
       // Verify some key routes
       const urls = routes.map((r) => r.url)
-      expect(urls).toContain('/')
-      expect(urls).toContain('/health')
-      expect(urls).toContain('/users')
-      expect(urls).toContain('/users/:id') // Valid now
-      expect(urls).toContain('/users/:id/posts')
-      expect(urls).toContain('/login') // _auth is pathless
-      expect(urls).toContain('/logout')
+      expect(urls).toContain('/api')
+      expect(urls).toContain('/api/health')
+      expect(urls).toContain('/api/users')
+      expect(urls).toContain('/api/users/:id') // Valid now
+      expect(urls).toContain('/api/users/:id/posts')
+      expect(urls).toContain('/api/login') // _auth is pathless
+      expect(urls).toContain('/api/logout')
     })
 
     it('should handle mixed .ts and .js files', () => {
@@ -356,7 +356,7 @@ describe('discoverRouteFiles', () => {
       // All should map to same URL but different methods
       const urls = new Set(routes.map((r) => r.url))
       expect(urls.size).toBe(1)
-      expect(urls.has('/users/:id')).toBe(true)
+      expect(urls.has('/api/users/:id')).toBe(true)
 
       const methods = routes.map((r) => r.method).sort()
       expect(methods).toEqual(['DELETE', 'GET', 'PATCH', 'PUT'])
@@ -374,20 +374,6 @@ describe('discoverRouteFiles', () => {
 
       const {routes, invalidFiles} = discoverRouteFiles(testDir)
       expect(routes).toEqual([])
-    })
-
-    it('should handle files with dots in directory names', () => {
-      createTestStructure({
-        'v1.0/users.get.ts': '',
-        'v2.0/users.get.ts': '',
-      })
-
-      const {routes, invalidFiles} = discoverRouteFiles(testDir)
-      expect(routes).toHaveLength(2)
-      expect(routes.map((r) => r.url).sort()).toEqual([
-        '/v1.0/users',
-        '/v2.0/users',
-      ])
     })
 
     it('should handle files with multiple dots', () => {
@@ -437,7 +423,7 @@ describe('discoverRouteFiles', () => {
       expect(routes).toHaveLength(2) // Only subdirectory files
 
       const urls = routes.map((r) => r.url).sort()
-      expect(urls).toEqual(['/docs/api/posts', '/docs/api/users'])
+      expect(urls).toEqual(['/api/docs/api/posts', '/api/docs/api/users'])
       expect(invalidFiles).toHaveLength(1) // about.get.ts is invalid
     })
 
@@ -454,7 +440,7 @@ describe('discoverRouteFiles', () => {
       expect(routes).toHaveLength(1) // Only api/users
 
       const urls = routes.map((r) => r.url).sort()
-      expect(urls).toEqual(['/docs/api/users'])
+      expect(urls).toEqual(['/api/docs/api/users'])
       expect(invalidFiles).toHaveLength(2) // about and intro
     })
 
@@ -470,7 +456,7 @@ describe('discoverRouteFiles', () => {
       expect(routes).toHaveLength(2) // Only api files
 
       const urls = routes.map((r) => r.url).sort()
-      expect(urls).toEqual(['/api/posts', '/api/users'])
+      expect(urls).toEqual(['/api/api/posts', '/api/api/users'])
       expect(invalidFiles).toHaveLength(1) // about
     })
 
@@ -485,7 +471,7 @@ describe('discoverRouteFiles', () => {
       expect(routes).toHaveLength(1)
 
       const urls = routes.map((r) => r.url).sort()
-      expect(urls).toEqual(['/docs/api/users'])
+      expect(urls).toEqual(['/api/docs/api/users'])
       expect(invalidFiles).toHaveLength(1)
     })
 

@@ -119,9 +119,7 @@ export function discoverRouteFiles(
 
         // Calculate URL path from file path
         const url = filePathToUrlPath(pathForUrlCalculation)
-        if (!url) {
-          continue // Skip if URL calculation fails
-        }
+        if (!url) continue // Skip if URL calculation fails
 
         // Add to results
         results.push({

@@ -40,7 +40,7 @@ import type { FastifyInstance } from 'fastify'
 
 export default async function (fastify: FastifyInstance) {
   fastify.route({
-    url: '/users',
+    url: '/api/users',
     method: 'GET',
     handler: async (request, reply) => {
       return { users: [] }
@@ -90,7 +90,7 @@ export default async function (fastify: FastifyInstance) {
 
       // Verify the file was actually updated
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
-      expect(updatedContent).toContain("url: '/users'")
+      expect(updatedContent).toContain("url: '/api/users'")
     })
   })
 
@@ -102,7 +102,7 @@ import type { FastifyInstance } from 'fastify'
 
 export default async function (fastify: FastifyInstance) {
   fastify.route({
-    url: '/users',
+    url: '/api/users',
     method: 'GET',
     handler: async (request, reply) => {
       return { users: [] }
@@ -130,7 +130,7 @@ import type { FastifyInstance } from 'fastify'
 
 export default async function (fastify: FastifyInstance) {
   fastify.route({
-    url: '/products',
+    url: '/api/products',
     method: 'GET',
     handler: async (request, reply) => {
       return { products: [] }
@@ -159,23 +159,23 @@ export default async function (fastify: FastifyInstance) {
       expect(result.conflictsResolved).toBe(0)
       expect(result.errors).toBe(0)
 
-      // Verify file2 was updated to /orders (not /users)
+      // Verify file2 was updated to /api/orders (not /users)
       const updatedContent = fs.readFileSync(file2Path, 'utf-8')
-      expect(updatedContent).toContain("url: '/orders'")
+      expect(updatedContent).toContain("url: '/api/orders'")
     })
   })
 
   describe('conflict detection and resolution', () => {
     it('should detect and resolve conflicts', () => {
-      // Two files in same directory with same name pattern (both map to /users)
-      // index.get.ts -> /users
-      // index.post.ts -> /users (conflict!)
+      // Two files in same directory with same name pattern (both map to /api/users)
+      // index.get.ts -> /api/users
+      // index.post.ts -> /api/users (conflict!)
       const file1Content = `
 import type { FastifyInstance } from 'fastify'
 
 export default async function (fastify: FastifyInstance) {
   fastify.route({
-    url: '/users',
+    url: '/api/users',
     method: 'GET',
     handler: async (request, reply) => {
       return { users: [] }
@@ -188,7 +188,7 @@ import type { FastifyInstance } from 'fastify'
 
 export default async function (fastify: FastifyInstance) {
   fastify.route({
-    url: '/users',
+    url: '/api/users',
     method: 'POST',
     handler: async (request, reply) => {
       return { users: [], version: 2 }
@@ -212,24 +212,24 @@ export default async function (fastify: FastifyInstance) {
 
       // Verify first file keeps original URL
       const file1Updated = fs.readFileSync(file1Path, 'utf-8')
-      expect(file1Updated).toContain("url: '/users'")
+      expect(file1Updated).toContain("url: '/api/users'")
 
       // Verify second file gets suffix
       const file2Updated = fs.readFileSync(file2Path, 'utf-8')
-      expect(file2Updated).toContain("url: '/users-2'")
+      expect(file2Updated).toContain("url: '/api/users-2'")
     })
 
     it('should handle three-way conflicts', () => {
-      // Three files that all map to /users
-      // index.get.ts -> /users
-      // index.post.ts -> /users
-      // index.put.ts -> /users
+      // Three files that all map to /api/users
+      // index.get.ts -> /api/users
+      // index.post.ts -> /api/users
+      // index.put.ts -> /api/users
       const fileContent = `
 import type { FastifyInstance } from 'fastify'
 
 export default async function (fastify: FastifyInstance) {
   fastify.route({
-    url: '/users',
+    url: '/api/users',
     method: 'GET',
     handler: async (request, reply) => {
       return { users: [] }
@@ -255,13 +255,13 @@ export default async function (fastify: FastifyInstance) {
 
       // Verify URLs
       const file1Updated = fs.readFileSync(file1Path, 'utf-8')
-      expect(file1Updated).toContain("url: '/users'")
+      expect(file1Updated).toContain("url: '/api/users'")
 
       const file2Updated = fs.readFileSync(file2Path, 'utf-8')
-      expect(file2Updated).toContain("url: '/users-2'")
+      expect(file2Updated).toContain("url: '/api/users-2'")
 
       const file3Updated = fs.readFileSync(file3Path, 'utf-8')
-      expect(file3Updated).toContain("url: '/users-3'")
+      expect(file3Updated).toContain("url: '/api/users-3'")
     })
   })
 
@@ -298,7 +298,7 @@ export default async function (fastify: FastifyInstance) {
       // Verify the file was updated with the correct nested URL
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
       expect(updatedContent).toContain(
-        "url: '/api/v1/users/:userId/posts/:postId'",
+        "url: '/api/api/v1/users/:userId/posts/:postId'",
       )
     })
   })
@@ -330,7 +330,7 @@ export default async function (fastify: FastifyInstance) {
 
       // Verify pathless layout is excluded from URL
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
-      expect(updatedContent).toContain("url: '/users'")
+      expect(updatedContent).toContain("url: '/api/users'")
     })
   })
 
@@ -394,7 +394,7 @@ export default async function (fastify: FastifyInstance) {
 
       // Verify the good file was still updated
       const updatedContent = fs.readFileSync(goodPath, 'utf-8')
-      expect(updatedContent).toContain("url: '/users'")
+      expect(updatedContent).toContain("url: '/api/users'")
     })
   })
 
@@ -404,32 +404,32 @@ export default async function (fastify: FastifyInstance) {
         {
           dir: 'users',
           file: 'index.get.ts',
-          wrongUrl: '/api/users',
-          correctUrl: '/users',
+          wrongUrl: '/wrong-users',
+          correctUrl: '/api/users',
         },
         {
           dir: 'users',
           file: 'index.post.ts',
           wrongUrl: '/create-user',
-          correctUrl: '/users',
+          correctUrl: '/api/users',
         },
         {
           dir: 'users/$userId',
           file: 'index.get.ts',
           wrongUrl: '/user/:id',
-          correctUrl: '/users/:userId',
+          correctUrl: '/api/users/:userId',
         },
         {
           dir: 'users/$userId',
           file: 'index.patch.ts',
-          wrongUrl: '/users/:userId',
-          correctUrl: '/users/:userId',
+          wrongUrl: '/wrong-path',
+          correctUrl: '/api/users/:userId',
         },
         {
           dir: 'products',
           file: 'index.get.ts',
-          wrongUrl: '/products',
-          correctUrl: '/products',
+          wrongUrl: '/api/products',
+          correctUrl: '/api/products',
         },
       ]
 
@@ -464,31 +464,31 @@ export default async function (fastify: FastifyInstance) {
         path.join(testDir, 'users/index.get.ts'),
         'utf-8',
       )
-      expect(file1).toContain("url: '/users'") // First keeps original
+      expect(file1).toContain("url: '/api/users'") // First keeps original
 
       const file2 = fs.readFileSync(
         path.join(testDir, 'users/index.post.ts'),
         'utf-8',
       )
-      expect(file2).toContain("url: '/users-2'") // Second gets suffix
+      expect(file2).toContain("url: '/api/users-2'") // Second gets suffix
 
       const file3 = fs.readFileSync(
         path.join(testDir, 'users/$userId/index.get.ts'),
         'utf-8',
       )
-      expect(file3).toContain("url: '/users/:userId'") // First keeps original
+      expect(file3).toContain("url: '/api/users/:userId'") // First keeps original
 
       const file4 = fs.readFileSync(
         path.join(testDir, 'users/$userId/index.patch.ts'),
         'utf-8',
       )
-      expect(file4).toContain("url: '/users/:userId-2'") // Second gets suffix
+      expect(file4).toContain("url: '/api/users/:userId-2'") // Second gets suffix
 
       const file5 = fs.readFileSync(
         path.join(testDir, 'products/index.get.ts'),
         'utf-8',
       )
-      expect(file5).toContain("url: '/products'") // No conflict, already correct
+      expect(file5).toContain("url: '/api/products'") // No conflict, already correct
     })
   })
 
@@ -642,10 +642,10 @@ export default async function (fastify: FastifyInstance) {
 
       // Verify both files were updated correctly
       const updated1 = fs.readFileSync(route1Path, 'utf-8')
-      expect(updated1).toContain("url: '/docs'")
+      expect(updated1).toContain("url: '/api/docs'")
 
       const updated2 = fs.readFileSync(route2Path, 'utf-8')
-      expect(updated2).toContain("url: '/docs/about'")
+      expect(updated2).toContain("url: '/api/docs/about'")
     })
   })
 
@@ -672,8 +672,8 @@ export default async function (fastify: FastifyInstance) {
       performInitialScan(testDir)
 
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
-      expect(updatedContent).toContain('url: "/users"')
-      expect(updatedContent).not.toContain("url: '/users'")
+      expect(updatedContent).toContain('url: "/api/users"')
+      expect(updatedContent).not.toContain("url: '/api/users'")
     })
 
     it('should preserve template literals', () => {
@@ -698,7 +698,7 @@ export default async function (fastify: FastifyInstance) {
       performInitialScan(testDir)
 
       const updatedContent = fs.readFileSync(filePath, 'utf-8')
-      expect(updatedContent).toContain('url: `/users`')
+      expect(updatedContent).toContain('url: `/api/users`')
     })
   })
 })

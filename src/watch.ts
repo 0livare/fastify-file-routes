@@ -27,19 +27,13 @@ async function main() {
   const verbose = args.verbose || false
   const apiDir = path.join(process.cwd(), 'src/api')
 
-  // Build sync config from CLI args
-  const syncConfig = {
-    rootFile: args.root as string | undefined,
-    addComments: args.comment !== false, // Default: true
-  }
-
   if (verbose) {
     console.log(chalk.bold.blue('🚀 Fastify Sync'))
     console.log(chalk.gray(`Watching: ${apiDir}\n`))
 
     // Perform initial scan
     console.log(chalk.bold('📋 Running initial scan...'))
-    const scanResult = performInitialScan(apiDir, syncConfig)
+    const scanResult = performInitialScan(apiDir)
 
     if (scanResult.totalFiles === 0) {
       console.log(chalk.yellow('\n⚠️  No route files found in src/api'))
@@ -60,10 +54,10 @@ async function main() {
 
       if (event.type === 'add') {
         if (verbose) console.log(chalk.green(`➕ File added: ${relativePath}`))
-        handleFileChange(event.filePath, apiDir, verbose, true, syncConfig)
+        handleFileChange(event.filePath, apiDir, verbose, true)
       } else if (event.type === 'change') {
         if (verbose) console.log(chalk.blue(`📝 File changed: ${relativePath}`))
-        handleFileChange(event.filePath, apiDir, verbose, false, syncConfig)
+        handleFileChange(event.filePath, apiDir, verbose, false)
       } else if (event.type === 'unlink') {
         if (verbose) console.log(chalk.red(`🗑️  File deleted: ${relativePath}`))
       }
@@ -108,7 +102,6 @@ function handleFileChange(
   apiDir: string,
   verbose: boolean = false,
   isNewFile: boolean = false,
-  syncConfig?: {rootFile?: string; addComments?: boolean},
 ): void {
   try {
     // Check if this file is in a directory with an index file
@@ -166,12 +159,7 @@ function handleFileChange(
     }
 
     // Synchronize the file (both URL and method)
-    const result = synchronizeRouteFile(
-      filePath,
-      expectedUrl,
-      expectedMethod,
-      syncConfig,
-    )
+    const result = synchronizeRouteFile(filePath, expectedUrl, expectedMethod)
 
     if (result.error) {
       if (verbose) console.log(chalk.red(`  ✗ Error: ${result.error}`))
