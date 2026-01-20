@@ -6,6 +6,7 @@ import {modifyRouteUrl, modifyRouteFields} from './ast-modifier'
 import type {HttpMethod} from './method-extractor'
 import {findRootServerFile} from './root-file-finder'
 import {extractPrefixFromServerFile} from './prefix-parser'
+import {filePathToFullUrlPath} from './path-mapper'
 
 export interface SyncConfig {
   /** Custom root server file path (without extension) */
@@ -133,7 +134,13 @@ export function synchronizeRouteFile(
     const addComments = config?.addComments !== false
     if (addComments && !urlMatches) {
       const prefix = getPrefixWithFallback(config?.rootFile)
-      fieldsToModify.fullUrl = prefix + expectedUrl
+      // Get the full URL path including parent directories that autoload will add
+      // Convert absolute path to relative path from project root
+      const relativePath = path.relative(process.cwd(), filePath)
+      const fullUrlPath = filePathToFullUrlPath(relativePath)
+      if (fullUrlPath) {
+        fieldsToModify.fullUrl = prefix + fullUrlPath
+      }
     }
 
     // Modify the fields

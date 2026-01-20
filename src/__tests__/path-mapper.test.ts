@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {filePathToUrlPath} from '../path-mapper'
+import {filePathToUrlPath, filePathToFullUrlPath} from '../path-mapper'
 
 describe('filePathToUrlPath', () => {
   describe('basic path conversion', () => {
@@ -75,13 +75,13 @@ describe('filePathToUrlPath', () => {
       )
     })
 
-    it('excludes parent directory for name.$param files in subdirectories (bug fix)', () => {
+    it('excludes parent directory for name.$param files in subdirectories (autoload handles it)', () => {
       expect(filePathToUrlPath('src/api/examples/foobar.$count.get.ts')).toBe(
         '/foobar/:count',
       )
     })
 
-    it('excludes parent directory for name.$param in deeply nested paths', () => {
+    it('excludes parent directories for name.$param in deeply nested paths', () => {
       expect(filePathToUrlPath('src/api/v1/admin/item.$itemId.get.ts')).toBe(
         '/item/:itemId',
       )
@@ -209,6 +209,78 @@ describe('filePathToUrlPath', () => {
 
     it('handles all pathless segments resulting in root', () => {
       expect(filePathToUrlPath('src/api/_layout/_auth/index.get.ts')).toBe('/')
+    })
+  })
+})
+
+describe('filePathToFullUrlPath', () => {
+  describe('basic path conversion', () => {
+    it('converts simple file path to full URL path', () => {
+      expect(filePathToFullUrlPath('src/api/users.get.ts')).toBe('/users')
+    })
+
+    it('converts nested file path to full URL path', () => {
+      expect(filePathToFullUrlPath('src/api/users/profile.get.ts')).toBe(
+        '/users/profile',
+      )
+    })
+  })
+
+  describe('name.$param pattern - key difference from filePathToUrlPath', () => {
+    it('preserves parent directories for name.$param files (unlike filePathToUrlPath)', () => {
+      // filePathToUrlPath returns '/foobar/:count' (for route definition)
+      // filePathToFullUrlPath returns '/examples/foobar/:count' (actual Fastify URL)
+      expect(
+        filePathToFullUrlPath('src/api/examples/foobar.$count.get.ts'),
+      ).toBe('/examples/foobar/:count')
+    })
+
+    it('preserves all parent directories for name.$param in deeply nested paths', () => {
+      expect(filePathToFullUrlPath('src/api/v1/admin/item.$itemId.get.ts')).toBe(
+        '/v1/admin/item/:itemId',
+      )
+    })
+
+    it('preserves multiple parent directories for name.$param files', () => {
+      expect(
+        filePathToFullUrlPath('src/api/org/team/member.$memberId.post.ts'),
+      ).toBe('/org/team/member/:memberId')
+    })
+
+    it('handles name.$param with pathless parent directories', () => {
+      expect(
+        filePathToFullUrlPath('src/api/_layout/products/item.$productId.get.ts'),
+      ).toBe('/products/item/:productId')
+    })
+
+    it('handles name.$param in root level (same as filePathToUrlPath)', () => {
+      expect(filePathToFullUrlPath('src/api/zach.$zachId.put.ts')).toBe(
+        '/zach/:zachId',
+      )
+    })
+  })
+
+  describe('other patterns - same as filePathToUrlPath', () => {
+    it('handles regular $param directories', () => {
+      expect(filePathToFullUrlPath('src/api/users/$userId.get.ts')).toBe(
+        '/users/:userId',
+      )
+    })
+
+    it('handles .$param pattern', () => {
+      expect(filePathToFullUrlPath('src/api/users/.$userId.get.ts')).toBe(
+        '/users/:userId',
+      )
+    })
+
+    it('handles index files', () => {
+      expect(filePathToFullUrlPath('src/api/users/index.get.ts')).toBe('/users')
+    })
+
+    it('handles pathless directories', () => {
+      expect(filePathToFullUrlPath('src/api/_layout/users.get.ts')).toBe(
+        '/users',
+      )
     })
   })
 })
