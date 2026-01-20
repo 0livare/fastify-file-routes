@@ -1,14 +1,14 @@
 # Fastify Sync CLI
 
-This CLI tool watches your API route files and automatically keeps the `url` and `method` fields in your Fastify route configuration in sync with the file path.
+This CLI tool watches your Fastify API route files and automatically updates the `url` and `method` fields to match the file path.
 
-It provides a fully-featured file-based routing convention for Fastify, handling:
+It provides a fully-featured file-based routing convention for Fastify:
 
-- Multiple endpoints for the same resource (e.g., `GET /users/:id` and `PATCH /users/:id`)
-- Route parameters (e.g., `:userId`)
-- Index routes (e.g., `/users` from `src/api/users/index.get.ts`)
-- Pathless layouts - grouping routes in folders that don't appear in URLs
 - Automatic synchronization between filenames and route URLs
+- Multiple endpoints for the same resource (e.g. `GET /users/:id` and `PATCH /users/:id`)
+- Route parameters (`src/api/users/$userId.get.ts`)
+- Index routes (`src/api/users/index.get.ts`)
+- Pathless layouts (`src/api/_group/users.post.ts`) - group routes into folders that don't appear in the URL
 
 ## Naming Convention
 
@@ -17,10 +17,10 @@ The tool establishes a naming convention similar to [Tanstack Router](https://ta
 | File Name                         | URL                         | Note                                                                             |
 | --------------------------------- | --------------------------- | -------------------------------------------------------------------------------- |
 | `src/api/users.get.ts`            | `GET /api/users`            | HTTP method is suffixed to the end of the file name                              |
-| `src/api/users/$userId.post.ts`   | `POST /api/users/:userId`   | Directories become URL segments; `$` prefix becomes `:` for fastify route params |
+| `src/api/users/$userId.put.ts`    | `PUT /api/users/:userId`    | Directories become URL segments; `$` prefix becomes `:` for fastify route params |
 | `src/api/users.$userId.delete.ts` | `DELETE /api/users/:userId` | Dots can also be used to separate params from the rest of the file name          |
 | `src/api/_auth/login.post.ts`     | `POST /api/login`           | Files/folders starting with `_` are excluded from URL                            |
-| `src/api/files/index.get.ts`      | `GET /api/files`            | `index.verb` files map to parent path                                            |
+| `src/api/files/index.patch.ts`    | `PATCH /api/files`          | `index.verb` files map to parent path                                            |
 
 ## Features
 
