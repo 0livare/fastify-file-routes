@@ -186,7 +186,7 @@ describe('synchronizeRouteFile', () => {
       const filePath = path.join(TEST_DIR, 'invalid.get.ts')
       const content = `
         const x = 42;
-        console.log(x);
+        console.info(x);
       `
       fs.writeFileSync(filePath, content)
 

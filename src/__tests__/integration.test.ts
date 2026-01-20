@@ -813,7 +813,7 @@ export default async function (fastify: FastifyInstance) {
       const invalidContent = `
 export default async function (fastify) {
   // No route() call here
-  console.log('This is not a route file')
+  console.info('This is not a route file')
 }
 `
 
@@ -1320,7 +1320,7 @@ export default async function (fastify: FastifyInstance) {
       const existingContent = `
 export default async function (fastify) {
   // Custom implementation
-  console.log('existing')
+  console.info('existing')
 }
 `
       const watcher = createScaffoldingWatcher(testDir)

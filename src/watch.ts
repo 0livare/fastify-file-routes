@@ -28,20 +28,20 @@ async function main() {
   const apiDir = path.join(process.cwd(), 'src/api')
 
   if (verbose) {
-    console.log(chalk.bold.blue('🚀 Fastify Sync'))
-    console.log(chalk.gray(`Watching: ${apiDir}\n`))
-    console.log(chalk.bold('📋 Running initial scan...'))
+    console.info(chalk.bold.blue('🚀 Fastify Sync'))
+    console.info(chalk.gray(`Watching: ${apiDir}\n`))
+    console.info(chalk.bold('📋 Running initial scan...'))
   }
 
   const scanResult = performInitialScan(apiDir, verbose)
   if (verbose) {
     if (scanResult.totalFiles === 0) {
-      console.log(chalk.yellow('\n⚠️  No route files found in src/api'))
-      console.log(
+      console.info(chalk.yellow('\n⚠️  No route files found in src/api'))
+      console.info(
         chalk.gray('Create route files with .get.ts, .post.ts, etc. suffixes'),
       )
     }
-    console.log(chalk.bold.green('\n👀 Watching for changes...\n'))
+    console.info(chalk.bold.green('\n👀 Watching for changes...\n'))
   }
 
   const watcher = createFileWatcher(apiDir, {
@@ -49,17 +49,19 @@ async function main() {
       const relativePath = path.relative(process.cwd(), event.filePath)
 
       if (event.type === 'add') {
-        if (verbose) console.log(chalk.green(`➕ File added: ${relativePath}`))
+        if (verbose) console.info(chalk.green(`➕ File added: ${relativePath}`))
         handleFileChange(event.filePath, apiDir, verbose, true)
       } else if (event.type === 'change') {
-        if (verbose) console.log(chalk.blue(`📝 File changed: ${relativePath}`))
+        if (verbose)
+          console.info(chalk.blue(`📝 File changed: ${relativePath}`))
         handleFileChange(event.filePath, apiDir, verbose, false)
       } else if (event.type === 'unlink') {
-        if (verbose) console.log(chalk.red(`🗑️  File deleted: ${relativePath}`))
+        if (verbose)
+          console.info(chalk.red(`🗑️  File deleted: ${relativePath}`))
       }
     },
     onReady: () => {
-      if (verbose) console.log(chalk.gray('Press Ctrl+C to stop watching\n'))
+      if (verbose) console.info(chalk.gray('Press Ctrl+C to stop watching\n'))
     },
     onError: (error) => {
       console.error(chalk.red('❌ Watcher error:'), error)
@@ -69,8 +71,8 @@ async function main() {
   // Set up graceful shutdown
   setupGracefulShutdown(watcher, () => {
     if (verbose) {
-      console.log(chalk.yellow('\n\n👋 Stopping watcher...'))
-      console.log(chalk.gray('Goodbye!'))
+      console.info(chalk.yellow('\n\n👋 Stopping watcher...'))
+      console.info(chalk.gray('Goodbye!'))
     }
   })
 
@@ -107,7 +109,7 @@ function handleFileChange(
 
     if (!isIndexFile && hasIndexFile(dir)) {
       if (verbose) {
-        console.log(
+        console.info(
           chalk.yellow(
             `  ⚠️  Skipping: directory contains an index file (this file will be ignored by Fastify)`,
           ),
@@ -122,7 +124,7 @@ function handleFileChange(
 
     if (!expectedUrl) {
       if (verbose)
-        console.log(chalk.gray(`  ⏭️  Skipping: not a valid route file`))
+        console.info(chalk.gray(`  ⏭️  Skipping: not a valid route file`))
       return
     }
 
@@ -130,7 +132,7 @@ function handleFileChange(
     const expectedMethod = extractHttpMethod(filePath)
     if (!expectedMethod) {
       if (verbose)
-        console.log(
+        console.info(
           chalk.gray(`  ⏭️  Skipping: no valid HTTP method in filename`),
         )
       return
@@ -144,7 +146,7 @@ function handleFileChange(
         const template = generateRouteTemplate(expectedUrl, expectedMethod)
         fs.writeFileSync(filePath, template, 'utf-8')
         if (verbose) {
-          console.log(
+          console.info(
             chalk.green(
               `  ✨ Scaffolded new route: ${expectedUrl} (${expectedMethod})`,
             ),
@@ -158,7 +160,7 @@ function handleFileChange(
     const result = synchronizeRouteFile(filePath, expectedUrl, expectedMethod)
 
     if (result.error) {
-      if (verbose) console.log(chalk.red(`  ✗ Error: ${result.error}`))
+      if (verbose) console.info(chalk.red(`  ✗ Error: ${result.error}`))
     } else if (result.modified) {
       if (verbose) {
         const changes: string[] = []
@@ -170,11 +172,11 @@ function handleFileChange(
             `method: ${result.oldMethod || '(none)'} → ${result.newMethod}`,
           )
         }
-        console.log(chalk.green(`  ✓ Updated: ${changes.join(', ')}`))
+        console.info(chalk.green(`  ✓ Updated: ${changes.join(', ')}`))
       }
     } else {
       if (verbose)
-        console.log(
+        console.info(
           chalk.gray(
             `  ✓ Already correct: ${result.newUrl} (${result.newMethod})`,
           ),

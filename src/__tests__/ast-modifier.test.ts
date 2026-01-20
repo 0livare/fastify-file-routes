@@ -296,7 +296,7 @@ fastify.route({
     it('should return error when no route found', () => {
       const code = `
 const x = 5
-console.log(x)
+console.info(x)
       `.trim()
 
       const result = modifyRouteUrl(code, '/new/path')
@@ -712,7 +712,7 @@ fastify.route({
     it('should return error when no route found', () => {
       const code = `
 const x = 5
-console.log(x)
+console.info(x)
       `.trim()
 
       const result = modifyRouteFields(code, {method: 'POST'})

@@ -133,7 +133,7 @@ export function setupGracefulShutdown(
   onShutdown?: () => void,
 ): void {
   const shutdown = async (signal: string) => {
-    console.log(`\n${signal} received. Shutting down gracefully...`)
+    console.info(`\n${signal} received. Shutting down gracefully...`)
     if (onShutdown) {
       onShutdown()
     }

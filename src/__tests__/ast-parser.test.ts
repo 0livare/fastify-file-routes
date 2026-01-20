@@ -258,7 +258,7 @@ describe('parseRouteFile', () => {
     it('should return null values when no route() call exists', () => {
       const code = `
         export default async function (fastify: FastifyInstance) {
-          console.log('No route here')
+          console.info('No route here')
         }
       `
       const result = parseRouteFile(code)

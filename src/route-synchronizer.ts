@@ -96,7 +96,7 @@ export function synchronizeRouteFile(
     if (!methodMatches && expectedMethod) {
       changes.push(`method: ${currentMethod || '(none)'} → ${expectedMethod}`)
     }
-    console.log(
+    console.info(
       `✓ Updated ${path.relative(process.cwd(), filePath)}: ${changes.join(', ')}`,
     )
 

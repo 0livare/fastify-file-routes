@@ -38,26 +38,26 @@ export function performInitialScan(
   apiDir: string = 'src/api',
   verbose: boolean = true,
 ): InitialScanResult {
-  if (verbose) console.log('🔍 Scanning route files...')
+  if (verbose) console.info('🔍 Scanning route files...')
 
   // Step 1: Discover all route files
   const {routes, invalidFiles} = discoverRouteFiles(apiDir)
-  if (verbose) console.log(`   Found ${routes.length} route file(s)`)
+  if (verbose) console.info(`   Found ${routes.length} route file(s)`)
 
   // Report invalid files
   if (invalidFiles.length > 0 && verbose) {
-    console.log(
+    console.info(
       `⚠️  Warning: Found ${invalidFiles.length} invalid route file(s):`,
     )
     for (const invalid of invalidFiles) {
-      console.log(`   ✗ ${invalid.filePath}`)
-      console.log(`     ${invalid.reason}`)
+      console.info(`   ✗ ${invalid.filePath}`)
+      console.info(`     ${invalid.reason}`)
     }
   }
 
   // Handle empty directory
   if (routes.length === 0) {
-    if (verbose) console.log('✓ No route files found. Nothing to do.')
+    if (verbose) console.info('✓ No route files found. Nothing to do.')
     return {
       totalFiles: 0,
       filesUpdated: 0,
@@ -80,39 +80,41 @@ export function performInitialScan(
   const validRoutes = routes.filter((r) => !invalidFilePaths.has(r.filePath))
 
   // Step 3: Detect and resolve conflicts
-  if (verbose) console.log('🔍 Detecting conflicts...')
+  if (verbose) console.info('🔍 Detecting conflicts...')
   const {fileUrlMap, fileRouteMap, conflicts} =
     detectAndResolveConflicts(validRoutes)
 
   if (verbose) {
     if (conflicts.length === 0) {
-      console.log('   No conflicts detected')
+      console.info('   No conflicts detected')
     } else {
-      console.log(`   Resolved ${conflicts.length} conflict(s)`)
+      console.info(`   Resolved ${conflicts.length} conflict(s)`)
     }
   }
 
   // Step 4: Synchronize all valid files (excluding invalid files)
-  if (verbose) console.log('🔄 Synchronizing route files...')
+  if (verbose) console.info('🔄 Synchronizing route files...')
   const syncSummary = synchronizeRoutes(fileUrlMap, fileRouteMap)
 
   // Step 5: Print summary
   if (verbose) {
-    console.log('\n📊 Summary:')
-    console.log(`   Total files scanned: ${routes.length}`)
-    console.log(`   Valid files synchronized: ${syncSummary.totalFiles}`)
-    console.log(`   Files updated: ${syncSummary.filesModified}`)
-    console.log(
+    console.info('\n📊 Summary:')
+    console.info(`   Total files scanned: ${routes.length}`)
+    console.info(`   Valid files synchronized: ${syncSummary.totalFiles}`)
+    console.info(`   Files updated: ${syncSummary.filesModified}`)
+    console.info(
       `   Files skipped (already correct): ${syncSummary.filesSkipped}`,
     )
     if (invalidFiles.length > 0) {
-      console.log(`   Invalid files (not synchronized): ${invalidFiles.length}`)
+      console.info(
+        `   Invalid files (not synchronized): ${invalidFiles.length}`,
+      )
     }
-    console.log(`   Conflicts resolved: ${conflicts.length}`)
+    console.info(`   Conflicts resolved: ${conflicts.length}`)
     if (syncSummary.errors > 0) {
-      console.log(`   Errors: ${syncSummary.errors}`)
+      console.info(`   Errors: ${syncSummary.errors}`)
     }
-    console.log('')
+    console.info('')
   }
 
   return {
