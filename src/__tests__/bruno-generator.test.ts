@@ -95,18 +95,18 @@ describe('generateBrunoRequest', () => {
 
 describe('generateFolderBru', () => {
   it('should generate folder.bru content', () => {
-    const result = generateFolderBru('/users')
+    const result = generateFolderBru('users')
 
     expect(result).toContain('meta {')
-    expect(result).toContain('name: /users')
+    expect(result).toContain('name: users')
     expect(result).toContain('auth {')
     expect(result).toContain('mode: inherit')
   })
 
-  it('should handle nested folder names', () => {
-    const result = generateFolderBru('/api/v1/users')
+  it('should handle folder names without paths', () => {
+    const result = generateFolderBru('profile')
 
-    expect(result).toContain('name: /api/v1/users')
+    expect(result).toContain('name: profile')
   })
 })
 
@@ -178,12 +178,12 @@ describe('ensureFolderBruFiles', () => {
     expect(fs.existsSync(usersFolderBru)).toBe(true)
     expect(fs.existsSync(profileFolderBru)).toBe(true)
 
-    // Verify content
+    // Verify content - folder names should be just the directory name, not full path
     const usersContent = fs.readFileSync(usersFolderBru, 'utf-8')
-    expect(usersContent).toContain('name: /users')
+    expect(usersContent).toContain('name: users')
 
     const profileContent = fs.readFileSync(profileFolderBru, 'utf-8')
-    expect(profileContent).toContain('name: /users/profile')
+    expect(profileContent).toContain('name: profile')
   })
 
   it('should not create folder.bru at collection root', () => {

@@ -196,10 +196,8 @@ export function ensureFolderBruFiles(
     // Create folder.bru if it doesn't exist
     const folderBruPath = path.join(currentPath, 'folder.bru')
     if (!fs.existsSync(folderBruPath)) {
-      const folderName = `/${relativePath
-        .split(path.sep)
-        .slice(0, parts.indexOf(part) + 1)
-        .join('/')}`
+      // Use only the current directory name, not the full path
+      const folderName = part
       const content = generateFolderBru(folderName)
       fs.writeFileSync(folderBruPath, content, 'utf-8')
     }
