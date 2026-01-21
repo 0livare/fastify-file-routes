@@ -11,6 +11,7 @@ import {generateRouteTemplate} from './route-template'
 import {help, version} from './commands'
 import {parseCliArgs} from './cli'
 import {findFirstFile} from './util/file-finder'
+import {createBrunoRequest} from './bruno-generator'
 
 async function main() {
   const args = parseCliArgs()
@@ -26,7 +27,33 @@ async function main() {
   }
 
   const verbose = args.verbose || false
+  const bruno = args.bruno || false
   const apiDir = path.join(process.cwd(), 'src/api')
+
+  // Find Bruno collection root if --bruno flag is enabled
+  let brunoCollectionRoot: string | null = null
+  if (bruno) {
+    const brunoJsonPath = findFirstFile({
+      filename: 'bruno.json',
+      searchDir: process.cwd(),
+      options: {maxDepth: 3},
+    })
+
+    if (brunoJsonPath) {
+      brunoCollectionRoot = path.dirname(brunoJsonPath)
+      if (verbose) {
+        console.info(
+          chalk.gray(`Found Bruno collection at: ${brunoCollectionRoot}`),
+        )
+      }
+    } else {
+      console.warn(
+        chalk.yellow(
+          '⚠️  --bruno flag enabled but bruno.json not found. Bruno request generation disabled.',
+        ),
+      )
+    }
+  }
 
   if (verbose) {
     console.info(chalk.bold.blue('🚀 Fastify Sync'))
@@ -51,11 +78,23 @@ async function main() {
 
       if (event.type === 'add') {
         if (verbose) console.info(chalk.green(`➕ File added: ${relativePath}`))
-        handleFileChange(event.filePath, apiDir, verbose, true)
+        handleFileChange(
+          event.filePath,
+          apiDir,
+          verbose,
+          true,
+          brunoCollectionRoot,
+        )
       } else if (event.type === 'change') {
         if (verbose)
           console.info(chalk.blue(`📝 File changed: ${relativePath}`))
-        handleFileChange(event.filePath, apiDir, verbose, false)
+        handleFileChange(
+          event.filePath,
+          apiDir,
+          verbose,
+          false,
+          brunoCollectionRoot,
+        )
       } else if (event.type === 'unlink') {
         if (verbose)
           console.info(chalk.red(`🗑️  File deleted: ${relativePath}`))
@@ -101,6 +140,7 @@ function handleFileChange(
   apiDir: string,
   verbose: boolean = false,
   isNewFile: boolean = false,
+  brunoCollectionRoot: string | null = null,
 ): void {
   try {
     // Check if this file is in a directory with an index file
@@ -153,6 +193,31 @@ function handleFileChange(
             ),
           )
         }
+
+        // Generate Bruno request if enabled
+        if (brunoCollectionRoot) {
+          try {
+            createBrunoRequest(
+              filePath,
+              brunoCollectionRoot,
+              expectedMethod,
+              expectedUrl,
+            )
+            if (verbose) {
+              console.info(
+                chalk.cyan(`  📝 Generated Bruno request for ${expectedUrl}`),
+              )
+            }
+          } catch (error) {
+            if (verbose) {
+              console.error(
+                chalk.red(`  ✗ Error generating Bruno request:`),
+                error instanceof Error ? error.message : error,
+              )
+            }
+          }
+        }
+
         return
       }
     }
