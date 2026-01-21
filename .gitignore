@@ -176,3 +176,5 @@ dist
 
 # Built binary files
 bin
+
+/tmp

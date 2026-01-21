@@ -57,10 +57,11 @@ export function createFileWatcher(
         return true
       }
 
-      // Check if it has a valid HTTP method suffix
-      const hasMethodSuffix = /\.(get|post|put|patch|delete)\.(ts|js)$/i.test(
-        filepath,
-      )
+      // Check if it has a valid HTTP method suffix or is a standalone method file
+      // Matches: .get.ts, .post.js, etc. OR get.ts, post.js, etc.
+      const hasMethodSuffix =
+        /\.(get|post|put|patch|delete)\.(ts|js)$/i.test(filepath) ||
+        /\/(get|post|put|patch|delete)\.(ts|js)$/i.test(filepath)
       return !hasMethodSuffix
     },
   })

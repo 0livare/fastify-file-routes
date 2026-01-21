@@ -21,6 +21,7 @@ The tool establishes a naming convention similar to [Tanstack Router](https://ta
 | `src/api/users.$userId.delete.ts` | `DELETE /api/users/:userId` | Dots can also be used to separate params from the rest of the file name          |
 | `src/api/_auth/login.post.ts`     | `POST /api/login`           | Files/folders starting with `_` are excluded from URL                            |
 | `src/api/files/index.patch.ts`    | `PATCH /api/files`          | `index.verb` files map to parent path                                            |
+| `src/api/files/patch.ts`          | `PATCH /api/files`          | The `index.` is optional. `verb.ts` files are equivalent to `index.verb.ts`      |
 
 ## Features
 

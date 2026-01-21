@@ -5,15 +5,17 @@
  * - Strip src/ prefix but keep api/
  * - Convert $param or .$param to :param (route parameters)
  * - Files/folders starting with _ are pathless (excluded from URL)
- * - index files map to their parent path
+ * - index files and method-only files map to their parent path
+ *   (both index.put.ts and put.ts map to the parent directory)
  * - Strip HTTP method suffix (.get.ts, .post.js, etc.)
  *
  * @param filePath - The file path relative to project root (e.g., 'src/api/users/$userId.get.ts')
  * @returns The full URL path (e.g., '/api/users/:userId') or null if invalid
  *
- * Example:
- * - File: 'src/api/users/$userId.get.ts'
- * - Returns: '/api/users/:userId'
+ * Examples:
+ * - File: 'src/api/users/$userId.get.ts' → '/api/users/:userId'
+ * - File: 'src/api/users/index.put.ts' → '/api/users'
+ * - File: 'src/api/users/put.ts' → '/api/users'
  */
 export function filePathToUrlPath(filePath: string): string | null {
   let path = stripFileExtensions(filePath)
@@ -97,8 +99,17 @@ function processSegments(args: {
       continue
     }
 
-    // Handle index files - they map to parent path
-    if (isLastSegment && segment === 'index') {
+    // Handle index files and method-only files - they map to parent path
+    // Both index.put.ts and put.ts should map to the same URL
+    if (
+      isLastSegment &&
+      (segment === 'index' ||
+        segment === 'get' ||
+        segment === 'post' ||
+        segment === 'put' ||
+        segment === 'patch' ||
+        segment === 'delete')
+    ) {
       continue
     }
 

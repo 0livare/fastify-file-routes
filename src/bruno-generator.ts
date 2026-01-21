@@ -34,7 +34,7 @@ export function generateBrunoRequest(
   // HTTP method and URL
   lines.push(`${method.toLowerCase()} {`)
   lines.push(`  url: {{appUrl}}${brunoUrl}`)
-  lines.push(hasJsonBody ? `  body: json` : `  body: none`)
+  lines.push(`  body: ${hasJsonBody ? 'json' : 'none'}`)
   lines.push(`  auth: inherit`)
   lines.push('}')
   lines.push('')

@@ -91,6 +91,14 @@ describe('extractHttpMethod', () => {
       expect(extractHttpMethod('src/api/posts/index.post.js')).toBe('POST')
     })
 
+    it('should extract method from standalone method files (equivalent to index.method.ts)', () => {
+      expect(extractHttpMethod('src/api/users/get.ts')).toBe('GET')
+      expect(extractHttpMethod('src/api/users/post.js')).toBe('POST')
+      expect(extractHttpMethod('src/api/products/put.ts')).toBe('PUT')
+      expect(extractHttpMethod('src/api/items/patch.js')).toBe('PATCH')
+      expect(extractHttpMethod('src/api/resources/delete.ts')).toBe('DELETE')
+    })
+
     it('should extract method from pathless layout files', () => {
       expect(extractHttpMethod('src/api/_auth/login.post.ts')).toBe('POST')
       expect(extractHttpMethod('src/api/_internal/health.get.js')).toBe('GET')
@@ -98,10 +106,12 @@ describe('extractHttpMethod', () => {
   })
 
   describe('invalid inputs', () => {
-    it('should return null for files without method suffix', () => {
+    it('should return null for files without method suffix (except standalone method names)', () => {
       expect(extractHttpMethod('users.ts')).toBe(null)
       expect(extractHttpMethod('users.js')).toBe(null)
       expect(extractHttpMethod('src/api/users.ts')).toBe(null)
+      expect(extractHttpMethod('index.ts')).toBe(null)
+      expect(extractHttpMethod('config.ts')).toBe(null)
     })
 
     it('should return null for unsupported HTTP methods', () => {

@@ -160,6 +160,61 @@ describe('discoverRouteFiles', () => {
       expect(routes).toHaveLength(1)
       expect(routes[0].filePath).toContain('users.get.ts')
     })
+
+    it('should discover standalone method files (get.ts, post.ts, etc.)', () => {
+      createTestStructure({
+        'users/get.ts': '',
+        'users/post.ts': '',
+        'products/put.ts': '',
+        'items/patch.js': '',
+        'resources/delete.ts': '',
+      })
+
+      const {routes} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(5)
+
+      // Verify each route has correct method and URL
+      const userGetRoute = routes.find((r) => r.filePath.includes('users/get.ts'))
+      expect(userGetRoute).toMatchObject({
+        method: 'GET',
+        url: '/api/users',
+      })
+
+      const userPostRoute = routes.find(
+        (r) => r.filePath.includes('users/post.ts'),
+      )
+      expect(userPostRoute).toMatchObject({
+        method: 'POST',
+        url: '/api/users',
+      })
+
+      const productPutRoute = routes.find(
+        (r) => r.filePath.includes('products/put.ts'),
+      )
+      expect(productPutRoute).toMatchObject({
+        method: 'PUT',
+        url: '/api/products',
+      })
+    })
+
+    it('should treat get.ts the same as index.get.ts', () => {
+      createTestStructure({
+        'orders/get.ts': '',
+        'products/index.get.ts': '',
+      })
+
+      const {routes} = discoverRouteFiles(testDir)
+      expect(routes).toHaveLength(2)
+
+      // Both should map to their parent directory URL
+      const ordersRoute = routes.find((r) => r.filePath.includes('orders/get.ts'))
+      const productsRoute = routes.find((r) =>
+        r.filePath.includes('products/index.get.ts'),
+      )
+
+      expect(ordersRoute?.url).toBe('/api/orders')
+      expect(productsRoute?.url).toBe('/api/products')
+    })
   })
 
   describe('Recursive Directory Scanning', () => {

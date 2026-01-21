@@ -384,6 +384,42 @@ describe('createFileWatcher', () => {
 
       await watcher.close()
     })
+
+    it('should detect standalone method files (get.ts, post.ts, etc.)', async () => {
+      const events: WatchEvent[] = []
+      const onEvent = vi.fn((event: WatchEvent) => {
+        events.push(event)
+      })
+
+      const watcher = createFileWatcher(testDir, {onEvent})
+
+      // Wait for watcher to be ready
+      await delay(200)
+
+      // Add standalone method files in subdirectory
+      fs.mkdirSync(path.join(testDir, 'users'), {recursive: true})
+      fs.mkdirSync(path.join(testDir, 'products'), {recursive: true})
+      fs.writeFileSync(path.join(testDir, 'users/get.ts'), '')
+      fs.writeFileSync(path.join(testDir, 'users/post.ts'), '')
+      fs.writeFileSync(path.join(testDir, 'products/put.ts'), '')
+
+      // Wait for file system events to be processed
+      await delay(500)
+
+      expect(events.length).toBeGreaterThanOrEqual(3)
+
+      // Verify all events are 'add' type
+      const addEvents = events.filter((e) => e.type === 'add')
+      expect(addEvents.length).toBeGreaterThanOrEqual(3)
+
+      // Verify file paths
+      const filePaths = addEvents.map((e) => path.basename(e.filePath))
+      expect(filePaths).toContain('get.ts')
+      expect(filePaths).toContain('post.ts')
+      expect(filePaths).toContain('put.ts')
+
+      await watcher.close()
+    })
   })
 
   describe('Error Handling', () => {

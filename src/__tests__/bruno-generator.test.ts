@@ -255,4 +255,43 @@ describe('createBrunoRequest', () => {
     expect(content).toContain('post {')
     expect(content).toContain('body:json {')
   })
+
+  it('should handle method-only file names (put.ts)', () => {
+    const routePath = path.join(testDir, 'src/api/users/put.ts')
+
+    createBrunoRequest(routePath, brunoDir, 'PUT', '/api/users')
+
+    // File path has users/put, so Bruno goes into users/ subdirectory
+    const usersDir = path.join(brunoDir, 'users')
+    const brunoFile = path.join(usersDir, 'overwrite users.bru')
+    expect(fs.existsSync(brunoFile)).toBe(true)
+
+    const content = fs.readFileSync(brunoFile, 'utf-8')
+    expect(content).toContain('name: overwrite users')
+    expect(content).toContain('put {')
+    expect(content).toContain('url: {{appUrl}}/api/users')
+  })
+
+  it('should treat get.ts and index.get.ts the same URL', () => {
+    // Test with get.ts - file at products/get.ts
+    const getPath = path.join(testDir, 'src/api/products/get.ts')
+    createBrunoRequest(getPath, brunoDir, 'GET', '/api/products')
+
+    // Test with index.get.ts - file at orders/index.get.ts
+    const indexGetPath = path.join(testDir, 'src/api/orders/index.get.ts')
+    createBrunoRequest(indexGetPath, brunoDir, 'GET', '/api/orders')
+
+    // Both map to same URL but different file locations result in same directory structure
+    const productsFile = path.join(brunoDir, 'products', 'get products.bru')
+    const ordersFile = path.join(brunoDir, 'orders', 'get orders.bru')
+
+    expect(fs.existsSync(productsFile)).toBe(true)
+    expect(fs.existsSync(ordersFile)).toBe(true)
+
+    const productsContent = fs.readFileSync(productsFile, 'utf-8')
+    const ordersContent = fs.readFileSync(ordersFile, 'utf-8')
+
+    expect(productsContent).toContain('name: get products')
+    expect(ordersContent).toContain('name: get orders')
+  })
 })

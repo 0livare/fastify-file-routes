@@ -45,6 +45,31 @@ test.each([
     filePath: 'src/api/foo/$fooId/index.delete.ts',
     url: '/api/foo/:fooId',
   },
+  // Method-only files (same as index files) - both should map to parent path
+  {
+    filePath: 'src/api/users/put.ts',
+    url: '/api/users',
+  },
+  {
+    filePath: 'src/api/users/get.ts',
+    url: '/api/users',
+  },
+  {
+    filePath: 'src/api/users/post.ts',
+    url: '/api/users',
+  },
+  {
+    filePath: 'src/api/users/patch.ts',
+    url: '/api/users',
+  },
+  {
+    filePath: 'src/api/users/delete.ts',
+    url: '/api/users',
+  },
+  {
+    filePath: 'src/api/foo/$fooId/put.ts',
+    url: '/api/foo/:fooId',
+  },
 ])('filePathToUrlPath($filePath)', (data) => {
   expect(filePathToUrlPath(data.filePath)).toBe(data.url)
 })
