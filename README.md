@@ -103,6 +103,19 @@ On startup, **Fastify Sync** will:
 - `--help`, `-h`: Show help message
 - `--version`, `-v`: Show version number
 - `--verbose`: Show detailed output during operation (by default, the CLI runs quietly)
+- `--bruno`: Auto-generate [Bruno](https://www.usebruno.com) API request files when a new Fastify route is created
+
+### Bruno Integration
+
+The `--bruno` flag enables automatic generation of corresponding [Bruno] API request files when a new Fastify route is created.
+
+Your Bruno collection is automatically located (by looking for `bruno.json`) and the Bruno folder structure mirrors your Fastify route files.
+
+> If you're not familiar, [Bruno] is an API client similar to Postman, except that it stores the API requests as plain text files in your project; alongside your code.
+>
+> This encourages developers to keep the requests up to date, and makes it so that when you check out old code, the API requests are still relevant.
+
+[Bruno]: https://www.usebruno.com
 
 ## How it works
 

@@ -29,67 +29,37 @@ export function help() {
     '  fastify-sync --verbose    ' +
       chalk.gray('Show detailed output during operation'),
   )
+  console.info(
+    '  fastify-sync --bruno      ' +
+      chalk.gray(
+        'Auto-generate Bruno API request files when a new Fastify route is created',
+      ),
+  )
   console.info()
   console.info(chalk.bold('How it works:'))
-  console.info(
-    chalk.gray('  • Scans your src/api directory for Fastify route files'),
+  gray(
+    '  • Scans your src/api directory for Fastify route files. Auto-fixing any URL mismatches.',
   )
-  console.info(
-    chalk.gray(
-      '  • Automatically updates the "url" field to match the file path',
-    ),
-  )
-  console.info(
-    chalk.gray('  • Watches for file changes and keeps URLs in sync'),
-  )
+  gray('  • Automatically updates `url` and `method` to match the file path')
+  gray('  • Watches for file changes and keeps URLs in sync')
   console.info()
   console.info(chalk.bold('Routing conventions:'))
-  console.info(
-    chalk.gray(
-      '  • src/api/users.get.ts              → url: "/api/users" (GET)',
-    ),
-  )
-  console.info(
-    chalk.gray(
-      '  • src/api/users/$id.get.ts          → url: "/api/users/:id" (GET)',
-    ),
-  )
-  console.info(
-    chalk.gray(
-      '  • src/api/users.$id.get.ts          → url: "/api/users/:id" (GET)',
-    ),
-  )
-  console.info(
-    chalk.gray(
-      '  • src/api/users/index.post.ts       → url: "/api/users" (POST)',
-    ),
-  )
-  console.info(
-    chalk.gray(
-      '  • src/api/_auth/login.post.ts       → url: "/api/login" (POST)',
-    ),
-  )
+  gray('  • src/api/users.get.ts              → url: "/api/users" (GET)')
+  gray('  • src/api/users/$id.get.ts          → url: "/api/users/:id" (GET)')
+  gray('  • src/api/users.$id.get.ts          → url: "/api/users/:id" (GET)')
+  gray('  • src/api/users/index.post.ts       → url: "/api/users" (POST)')
+  gray('  • src/api/users/post.ts             → url: "/api/users" (POST)')
+  gray('  • src/api/_auth/login.post.ts       → url: "/api/login" (POST)')
   console.info()
   console.info(chalk.bold('Supported HTTP methods:'))
-  console.info(chalk.gray('  GET, POST, PUT, PATCH, DELETE'))
+  console.info('  GET, POST, PUT, PATCH, DELETE')
   console.info()
-  console.info(chalk.bold('Examples:'))
-  console.info(chalk.cyan('  # Start watching your API directory (quiet mode)'))
-  console.info('  $ fastify-sync')
-  console.info()
-  console.info(chalk.cyan('  # Start watching with detailed output'))
-  console.info('  $ fastify-sync --verbose')
-  console.info()
-  console.info(chalk.cyan('  # The CLI will:'))
-  console.info(
-    chalk.gray('  • Scan all route files and fix any incorrect URLs'),
-  )
-  console.info(chalk.gray('  • Watch for new/modified/deleted route files'))
-  console.info(
-    chalk.gray('  • Automatically update URLs when files are moved or renamed'),
-  )
   console.info()
   console.info(chalk.bold('More info:'))
   console.info(chalk.gray('  https://github.com/0livare/fastify-file-routes'))
-  console.info()
+  console.info('\n')
+}
+
+function gray(text: string) {
+  console.info(chalk.gray(text))
 }
