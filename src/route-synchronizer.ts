@@ -1,8 +1,8 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import {parseRouteFile} from './ast-parser'
-import {modifyRouteFields} from './ast-modifier'
-import type {HttpMethod} from './method-extractor'
+import {parseRouteFile} from './ast/ast-parser'
+import {modifyRouteFields} from './ast/ast-modifier'
+import type {HttpMethod} from './filepath/method-extractor'
 
 export interface SyncResult {
   filePath: string

@@ -4,7 +4,7 @@ import * as path from 'path'
 import {performInitialScan} from '../initial-scan'
 import {createFileWatcher, type WatchEvent} from '../file-watcher'
 import {synchronizeRouteFile} from '../route-synchronizer'
-import {parseRouteFile} from '../ast-parser'
+import {parseRouteFile} from '../ast/ast-parser'
 
 /**
  * Integration tests for the complete Fastify Sync CLI.

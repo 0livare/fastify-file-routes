@@ -1,5 +1,5 @@
 import {describe, it, expect, beforeEach, afterEach} from 'vitest'
-import {extractPrefixFromServerFile} from '../prefix-parser'
+import {extractPrefixFromServerFile} from '../filepath/prefix-parser'
 import {existsSync, mkdirSync, writeFileSync, rmSync} from 'fs'
 import {resolve} from 'path'
 

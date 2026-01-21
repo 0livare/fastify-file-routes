@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import type {HttpMethod} from './method-extractor'
+import type {HttpMethod} from './filepath/method-extractor'
 
 /**
  * Checks if fastify-type-provider-zod is installed by looking in package.json

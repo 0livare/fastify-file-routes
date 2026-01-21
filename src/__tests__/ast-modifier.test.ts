@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {modifyRouteUrl, modifyRouteFields} from '../ast-modifier'
+import {modifyRouteUrl, modifyRouteFields} from '../ast/ast-modifier'
 
 describe('modifyRouteUrl', () => {
   describe('basic modification', () => {

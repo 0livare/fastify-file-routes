@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import {extractHttpMethod, type HttpMethod} from './method-extractor'
-import {filePathToUrlPath} from './path-mapper'
+import {extractHttpMethod, type HttpMethod} from './filepath/method-extractor'
+import {filePathToUrlPath} from './filepath/path-mapper'
 
 /**
  * Metadata about a discovered route file

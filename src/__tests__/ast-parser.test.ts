@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {parseRouteFile} from '../ast-parser'
+import {parseRouteFile} from '../ast/ast-parser'
 
 describe('parseRouteFile', () => {
   describe('basic route parsing', () => {

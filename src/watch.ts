@@ -5,11 +5,12 @@ import chalk from 'chalk'
 import {performInitialScan} from './initial-scan'
 import {createFileWatcher, setupGracefulShutdown} from './file-watcher'
 import {synchronizeRouteFile} from './route-synchronizer'
-import {filePathToUrlPath} from './path-mapper'
-import {extractHttpMethod} from './method-extractor'
+import {filePathToUrlPath} from './filepath/path-mapper'
+import {extractHttpMethod} from './filepath/method-extractor'
 import {generateRouteTemplate} from './route-template'
 import {help, version} from './commands'
 import {parseCliArgs} from './cli'
+import {findFirstFile} from './util/file-finder'
 
 async function main() {
   const args = parseCliArgs()

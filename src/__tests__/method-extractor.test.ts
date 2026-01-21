@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {extractHttpMethod} from '../method-extractor'
+import {extractHttpMethod} from '../filepath/method-extractor'
 
 describe('extractHttpMethod', () => {
   describe('valid HTTP methods with .ts extension', () => {

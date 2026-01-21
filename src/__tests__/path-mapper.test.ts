@@ -1,5 +1,5 @@
 import {test, expect} from 'vitest'
-import {filePathToUrlPath} from '../path-mapper'
+import {filePathToUrlPath} from '../filepath/path-mapper'
 
 // CLAUDE DO NOT MODIFY THESE TESTS THEY ARE CORRECT
 // IF THEY FAIL THE CODE NEEDS TO BE FIXED
