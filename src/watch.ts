@@ -78,6 +78,7 @@ async function main() {
 
       if (event.type === 'add') {
         if (verbose) console.info(chalk.green(`➕ File added: ${relativePath}`))
+        // Handle scaffolding and Bruno generation for new files
         handleFileChange(
           event.filePath,
           apiDir,
@@ -85,19 +86,26 @@ async function main() {
           true,
           brunoCollectionRoot,
         )
+        // After handling the new file, re-run full scan with conflict detection
+        if (verbose)
+          console.info(chalk.gray('   Running conflict detection...'))
+        performInitialScan(apiDir, false)
       } else if (event.type === 'change') {
         if (verbose)
           console.info(chalk.blue(`📝 File changed: ${relativePath}`))
-        handleFileChange(
-          event.filePath,
-          apiDir,
-          verbose,
-          false,
-          brunoCollectionRoot,
-        )
+        // For changes, run full scan with conflict detection
+        // This catches any manual URL changes that might create conflicts
+        if (verbose)
+          console.info(chalk.gray('   Running conflict detection...'))
+        performInitialScan(apiDir, false)
       } else if (event.type === 'unlink') {
         if (verbose)
           console.info(chalk.red(`🗑️  File deleted: ${relativePath}`))
+        // Re-run conflict detection after deletion
+        // A deleted file might have resolved a conflict
+        if (verbose)
+          console.info(chalk.gray('   Running conflict detection...'))
+        performInitialScan(apiDir, false)
       }
     },
     onReady: () => {

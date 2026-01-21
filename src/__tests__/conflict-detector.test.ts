@@ -1,8 +1,5 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest'
-import {
-  detectAndResolveConflicts,
-  type ConflictResolutionResult,
-} from '../conflict-detector'
+import {detectAndResolveConflicts} from '../conflict-detector'
 import type {RouteFileMetadata} from '../file-discovery'
 
 describe('detectAndResolveConflicts', () => {
@@ -68,6 +65,75 @@ describe('detectAndResolveConflicts', () => {
       expect(result.fileUrlMap.get('/api/comments.get.ts')).toBe('/api/comments')
       expect(consoleWarnSpy).not.toHaveBeenCalled()
     })
+
+    it('should return empty conflicts array for same URL with different HTTP methods', () => {
+      const routes: RouteFileMetadata[] = [
+        {
+          filePath: '/api/users.get.ts',
+          method: 'GET',
+          url: '/api/users',
+        },
+        {
+          filePath: '/api/users.post.ts',
+          method: 'POST',
+          url: '/api/users',
+        },
+        {
+          filePath: '/api/users.patch.ts',
+          method: 'PATCH',
+          url: '/api/users',
+        },
+        {
+          filePath: '/api/users.delete.ts',
+          method: 'DELETE',
+          url: '/api/users',
+        },
+      ]
+      const result = detectAndResolveConflicts(routes)
+
+      expect(result.conflicts).toEqual([])
+      expect(result.fileUrlMap.get('/api/users.get.ts')).toBe('/api/users')
+      expect(result.fileUrlMap.get('/api/users.post.ts')).toBe('/api/users')
+      expect(result.fileUrlMap.get('/api/users.patch.ts')).toBe('/api/users')
+      expect(result.fileUrlMap.get('/api/users.delete.ts')).toBe('/api/users')
+      expect(consoleWarnSpy).not.toHaveBeenCalled()
+    })
+
+    it('should detect conflicts when same method with different parameter names map to same structure', () => {
+      // $userId.get.ts -> /api/users/:userId
+      // $id.get.ts -> /api/users/:id
+      // These should conflict because they're both GET /api/users/:param
+      const routes: RouteFileMetadata[] = [
+        {
+          filePath: '/api/users/$userId.get.ts',
+          method: 'GET',
+          url: '/api/users/:userId',
+        },
+        {
+          filePath: '/api/users/$id.get.ts',
+          method: 'GET',
+          url: '/api/users/:id',
+        },
+      ]
+      const result = detectAndResolveConflicts(routes)
+
+      expect(result.conflicts).toHaveLength(1)
+      expect(result.conflicts[0]).toEqual({
+        url: '/api/users/:userId',
+        files: ['/api/users/$userId.get.ts', '/api/users/$id.get.ts'],
+      })
+
+      // First file keeps original URL
+      expect(result.fileUrlMap.get('/api/users/$userId.get.ts')).toBe(
+        '/api/users/:userId',
+      )
+      // Second file gets -2 suffix on the 'users' segment, not the parameter
+      expect(result.fileUrlMap.get('/api/users/$id.get.ts')).toBe(
+        '/api/users-2/:id',
+      )
+
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(3)
+    })
   })
 
   describe('Two-way conflicts', () => {
@@ -96,9 +162,9 @@ describe('detectAndResolveConflicts', () => {
       expect(result.fileUrlMap.get('/api/users/$userId.get.ts')).toBe(
         '/api/users/:userId',
       )
-      // Second file gets -2 suffix
+      // Second file gets -2 suffix on 'users' segment
       expect(result.fileUrlMap.get('/api/users/$id.get.ts')).toBe(
-        '/api/users/:userId-2',
+        '/api/users-2/:userId',
       )
 
       expect(consoleWarnSpy).toHaveBeenCalledTimes(3)
@@ -153,13 +219,13 @@ describe('detectAndResolveConflicts', () => {
       expect(result.fileUrlMap.get('/api/users/$userId.get.ts')).toBe(
         '/api/users/:userId',
       )
-      // Second file gets -2 suffix
+      // Second file gets -2 suffix on 'users' segment
       expect(result.fileUrlMap.get('/api/users/$id.get.ts')).toBe(
-        '/api/users/:userId-2',
+        '/api/users-2/:userId',
       )
-      // Third file gets -3 suffix
+      // Third file gets -3 suffix on 'users' segment
       expect(result.fileUrlMap.get('/api/users/$uid.get.ts')).toBe(
-        '/api/users/:userId-3',
+        '/api/users-3/:userId',
       )
     })
 
@@ -235,13 +301,13 @@ describe('detectAndResolveConflicts', () => {
         '/api/users/:userId',
       )
       expect(result.fileUrlMap.get('/api/users/$id.get.ts')).toBe(
-        '/api/users/:userId-2',
+        '/api/users-2/:userId',
       )
       expect(result.fileUrlMap.get('/api/posts/$postId.get.ts')).toBe(
         '/api/posts/:postId',
       )
       expect(result.fileUrlMap.get('/api/posts/$id.get.ts')).toBe(
-        '/api/posts/:postId-2',
+        '/api/posts-2/:postId',
       )
       expect(result.fileUrlMap.get('/api/comments.get.ts')).toBe('/api/comments')
     })
@@ -323,7 +389,7 @@ describe('detectAndResolveConflicts', () => {
         result.fileUrlMap.get('/api/users/$userId/posts/$postId.get.ts'),
       ).toBe('/api/users/:userId/posts/:postId')
       expect(result.fileUrlMap.get('/api/users/$uid/posts/$pid.get.ts')).toBe(
-        '/api/users/:userId/posts/:postId-2',
+        '/api/users/:userId/posts-2/:postId',
       )
     })
 
@@ -369,11 +435,12 @@ describe('detectAndResolveConflicts', () => {
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         '⚠️  Conflict detected: 2 files map to /api/users/:userId',
       )
+      // Paths are now relative to cwd, so we check for the pattern
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        '   → /api/users/$userId.get.ts (kept as /api/users/:userId)',
+        expect.stringContaining('(kept as /api/users/:userId)'),
       )
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        '   → /api/users/$id.get.ts (renamed to /api/users/:userId-2)',
+        expect.stringContaining('(renamed to /api/users-2/:userId)'),
       )
     })
 
@@ -498,7 +565,10 @@ describe('detectAndResolveConflicts', () => {
 
       expect(result.conflicts).toHaveLength(1)
       expect(result.fileUrlMap.get('/api/long1.get.ts')).toBe(longUrl)
-      expect(result.fileUrlMap.get('/api/long2.get.ts')).toBe(`${longUrl}-2`)
+      // Suffix is added to the last non-parameter segment ('segments')
+      expect(result.fileUrlMap.get('/api/long2.get.ts')).toBe(
+        '/very/long/nested/path/with/many/segments-2/:param1/:param2/:param3',
+      )
     })
 
     it('should handle special characters in file paths', () => {

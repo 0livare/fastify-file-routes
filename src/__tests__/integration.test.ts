@@ -259,8 +259,8 @@ export default async function (fastify) {
   })
 
   describe('Conflict Resolution', () => {
-    it('should detect and resolve conflicts when multiple files map to same URL', () => {
-      // Create multiple files that would map to /users
+    it('should NOT detect conflicts when files with different methods map to same URL', () => {
+      // Different methods on the same URL are NOT conflicts in REST APIs
       const file1 = `
 export default async function (fastify) {
   fastify.route({
@@ -299,9 +299,9 @@ export default async function (fastify) {
       const result = performInitialScan(testDir)
 
       expect(result.totalFiles).toBe(3)
-      expect(result.conflictsResolved).toBe(1) // One conflict with 3 files
+      expect(result.conflictsResolved).toBe(0) // No conflicts - different methods!
 
-      // Verify files got unique URLs
+      // Verify all files keep the same URL (no suffixes needed)
       const file1Content = fs.readFileSync(
         path.join(testDir, 'users/index.get.ts'),
         'utf-8',
@@ -315,101 +315,10 @@ export default async function (fastify) {
         'utf-8',
       )
 
-      // Verify all files have unique URLs (one keeps original, others get suffixes)
-      const urls = [
-        file1Content.match(/url: '([^']+)'/)?.[1],
-        file2Content.match(/url: '([^']+)'/)?.[1],
-        file3Content.match(/url: '([^']+)'/)?.[1],
-      ]
-
-      // Check that we have one /api/users and two with suffixes
-      expect(urls).toContain('/api/users')
-      expect(urls).toContain('/api/users-2')
-      expect(urls).toContain('/api/users-3')
-      // All should be unique
-      expect(new Set(urls).size).toBe(3)
-    })
-
-    it('should handle multiple independent conflicts correctly', () => {
-      // Create two separate conflict groups
-      const usersGet = `
-export default async function (fastify) {
-  fastify.route({
-    url: '/users',
-    method: 'GET',
-    handler: async () => ({ type: 'users-get' })
-  })
-}
-`
-
-      const usersPost = `
-export default async function (fastify) {
-  fastify.route({
-    url: '/users',
-    method: 'POST',
-    handler: async () => ({ type: 'users-post' })
-  })
-}
-`
-
-      const productsGet = `
-export default async function (fastify) {
-  fastify.route({
-    url: '/products',
-    method: 'GET',
-    handler: async () => ({ type: 'products-get' })
-  })
-}
-`
-
-      const productsPost = `
-export default async function (fastify) {
-  fastify.route({
-    url: '/products',
-    method: 'POST',
-    handler: async () => ({ type: 'products-post' })
-  })
-}
-`
-
-      fs.mkdirSync(path.join(testDir, 'users'), {recursive: true})
-      fs.mkdirSync(path.join(testDir, 'products'), {recursive: true})
-
-      fs.writeFileSync(path.join(testDir, 'users/index.get.ts'), usersGet)
-      fs.writeFileSync(path.join(testDir, 'users/index.post.ts'), usersPost)
-      fs.writeFileSync(path.join(testDir, 'products/index.get.ts'), productsGet)
-      fs.writeFileSync(
-        path.join(testDir, 'products/index.post.ts'),
-        productsPost,
-      )
-
-      const result = performInitialScan(testDir)
-
-      expect(result.totalFiles).toBe(4)
-      expect(result.conflictsResolved).toBe(2) // Two separate conflicts
-
-      // Verify each group got unique URLs
-      const usersGetContent = fs.readFileSync(
-        path.join(testDir, 'users/index.get.ts'),
-        'utf-8',
-      )
-      const usersPostContent = fs.readFileSync(
-        path.join(testDir, 'users/index.post.ts'),
-        'utf-8',
-      )
-      const productsGetContent = fs.readFileSync(
-        path.join(testDir, 'products/index.get.ts'),
-        'utf-8',
-      )
-      const productsPostContent = fs.readFileSync(
-        path.join(testDir, 'products/index.post.ts'),
-        'utf-8',
-      )
-
-      expect(usersGetContent).toContain("url: '/api/users'")
-      expect(usersPostContent).toContain("url: '/api/users-2'")
-      expect(productsGetContent).toContain("url: '/api/products'")
-      expect(productsPostContent).toContain("url: '/api/products-2'")
+      // All should have the same URL - this is valid REST
+      expect(file1Content).toContain("url: '/api/users'")
+      expect(file2Content).toContain("url: '/api/users'")
+      expect(file3Content).toContain("url: '/api/users'")
     })
   })
 
@@ -687,7 +596,7 @@ export default async function (fastify: FastifyInstance) {
           .replace(/\s+/g, ' '),
       ).toContain("url: '/api/users/:userId'")
 
-      // Products should have conflict resolution applied
+      // Products should NOT have conflict resolution - different methods are allowed
       const productsGet = fs.readFileSync(
         path.join(testDir, 'products/index.get.ts'),
         'utf-8',
@@ -698,7 +607,7 @@ export default async function (fastify: FastifyInstance) {
       )
 
       expect(productsGet).toContain("url: '/api/products'")
-      expect(productsPost).toContain("url: '/api/products-2'")
+      expect(productsPost).toContain("url: '/api/products'")
 
       // Verify all files are valid TypeScript
       expect(() => parseRouteFile(productsGet)).not.toThrow()

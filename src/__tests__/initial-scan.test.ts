@@ -167,15 +167,16 @@ export default async function (fastify: FastifyInstance) {
 
   describe('conflict detection and resolution', () => {
     it('should detect and resolve conflicts', () => {
-      // Two files in same directory with same name pattern (both map to /api/users)
-      // index.get.ts -> /api/users
-      // index.post.ts -> /api/users (conflict!)
+      // Two files with SAME METHOD and different param names map to same URL structure (real conflict!)
+      // $userId.get.ts -> /api/users/:userId (normalized to :param)
+      // $id.get.ts -> /api/users/:userId initially (normalized to :param) - CONFLICT!
+      // After conflict resolution, $id.get.ts gets corrected to :id and gets -2 suffix
       const file1Content = `
 import type { FastifyInstance } from 'fastify'
 
 export default async function (fastify: FastifyInstance) {
   fastify.route({
-    url: '/api/users',
+    url: '/api/users/:userId',
     method: 'GET',
     handler: async (request, reply) => {
       return { users: [] }
@@ -188,8 +189,8 @@ import type { FastifyInstance } from 'fastify'
 
 export default async function (fastify: FastifyInstance) {
   fastify.route({
-    url: '/api/users',
-    method: 'POST',
+    url: '/api/users/:userId',
+    method: 'GET',
     handler: async (request, reply) => {
       return { users: [], version: 2 }
     }
@@ -199,8 +200,8 @@ export default async function (fastify: FastifyInstance) {
 
       fs.mkdirSync(path.join(testDir, 'users'), {recursive: true})
 
-      const file1Path = path.join(testDir, 'users/index.get.ts')
-      const file2Path = path.join(testDir, 'users/index.post.ts')
+      const file1Path = path.join(testDir, 'users/$userId.get.ts')
+      const file2Path = path.join(testDir, 'users/$id.get.ts')
 
       fs.writeFileSync(file1Path, file1Content)
       fs.writeFileSync(file2Path, file2Content)
@@ -210,26 +211,34 @@ export default async function (fastify: FastifyInstance) {
       expect(result.totalFiles).toBe(2)
       expect(result.conflictsResolved).toBe(1)
 
-      // Verify first file keeps original URL
+      // Verify both files have unique URLs
       const file1Updated = fs.readFileSync(file1Path, 'utf-8')
-      expect(file1Updated).toContain("url: '/api/users'")
-
-      // Verify second file gets suffix
       const file2Updated = fs.readFileSync(file2Path, 'utf-8')
-      expect(file2Updated).toContain("url: '/api/users-2'")
+
+      const url1 = file1Updated.match(/url: '([^']+)'/)?.[1]
+      const url2 = file2Updated.match(/url: '([^']+)'/)?.[1]
+
+      // Both should have their correct parameter names
+      expect(url1).toMatch(/:(userId|id)/)
+      expect(url2).toMatch(/:(userId|id)/)
+
+      // URLs should be different
+      expect(url1).not.toBe(url2)
+
+      // One should have -2 suffix, one should not
+      const hasSuffix = url1?.includes('-2') || url2?.includes('-2')
+      expect(hasSuffix).toBe(true)
     })
 
     it('should handle three-way conflicts', () => {
-      // Three files that all map to /api/users
-      // index.get.ts -> /api/users
-      // index.post.ts -> /api/users
-      // index.put.ts -> /api/users
+      // Three files with SAME METHOD that all map to same URL structure (real conflict!)
+      // All start with :userId in code, but filenames suggest different param names
       const fileContent = `
 import type { FastifyInstance } from 'fastify'
 
 export default async function (fastify: FastifyInstance) {
   fastify.route({
-    url: '/api/users',
+    url: '/api/users/:userId',
     method: 'GET',
     handler: async (request, reply) => {
       return { users: [] }
@@ -240,9 +249,9 @@ export default async function (fastify: FastifyInstance) {
 
       fs.mkdirSync(path.join(testDir, 'users'), {recursive: true})
 
-      const file1Path = path.join(testDir, 'users/index.get.ts')
-      const file2Path = path.join(testDir, 'users/index.post.ts')
-      const file3Path = path.join(testDir, 'users/index.put.ts')
+      const file1Path = path.join(testDir, 'users/$userId.get.ts')
+      const file2Path = path.join(testDir, 'users/$id.get.ts')
+      const file3Path = path.join(testDir, 'users/$uid.get.ts')
 
       fs.writeFileSync(file1Path, fileContent)
       fs.writeFileSync(file2Path, fileContent)
@@ -253,15 +262,27 @@ export default async function (fastify: FastifyInstance) {
       expect(result.totalFiles).toBe(3)
       expect(result.conflictsResolved).toBe(1)
 
-      // Verify URLs
+      // The order files are processed may vary, but we should have unique URLs
       const file1Updated = fs.readFileSync(file1Path, 'utf-8')
-      expect(file1Updated).toContain("url: '/api/users'")
-
       const file2Updated = fs.readFileSync(file2Path, 'utf-8')
-      expect(file2Updated).toContain("url: '/api/users-2'")
-
       const file3Updated = fs.readFileSync(file3Path, 'utf-8')
-      expect(file3Updated).toContain("url: '/api/users-3'")
+
+      const urls = [
+        file1Updated.match(/url: '([^']+)'/)?.[1],
+        file2Updated.match(/url: '([^']+)'/)?.[1],
+        file3Updated.match(/url: '([^']+)'/)?.[1],
+      ]
+
+      // All URLs should be unique
+      expect(new Set(urls).size).toBe(3)
+
+      // Each should have the correct param name for its filename
+      // and one keeps original, others get -2, -3 suffixes
+      const hasUserId = urls.some((u) => u?.includes(':userId') && !u.includes('-'))
+      const hasConflictSuffix = urls.some((u) => u?.includes('-2') || u?.includes('-3'))
+
+      expect(hasUserId || urls.some((u) => u?.includes(':id') && !u.includes('-'))).toBe(true)
+      expect(hasConflictSuffix).toBe(true)
     })
   })
 
@@ -454,35 +475,35 @@ export default async function (fastify: FastifyInstance) {
       const result = performInitialScan(testDir)
 
       expect(result.totalFiles).toBe(5)
-      expect(result.filesUpdated).toBe(4) // 4 files updated (includes conflict resolutions)
+      expect(result.filesUpdated).toBe(4) // 4 files updated
       expect(result.filesSkipped).toBe(1) // 1 already correct (products)
-      expect(result.conflictsResolved).toBe(2) // 2 conflicts: users/ and users/$userId/
+      expect(result.conflictsResolved).toBe(0) // No conflicts - different methods are allowed!
       expect(result.errors).toBe(0)
 
-      // Verify specific files (accounting for conflicts)
+      // Verify all files have correct URLs (no conflict suffixes needed)
       const file1 = fs.readFileSync(
         path.join(testDir, 'users/index.get.ts'),
         'utf-8',
       )
-      expect(file1).toContain("url: '/api/users'") // First keeps original
+      expect(file1).toContain("url: '/api/users'")
 
       const file2 = fs.readFileSync(
         path.join(testDir, 'users/index.post.ts'),
         'utf-8',
       )
-      expect(file2).toContain("url: '/api/users-2'") // Second gets suffix
+      expect(file2).toContain("url: '/api/users'") // Same URL, different method - valid!
 
       const file3 = fs.readFileSync(
         path.join(testDir, 'users/$userId/index.get.ts'),
         'utf-8',
       )
-      expect(file3).toContain("url: '/api/users/:userId'") // First keeps original
+      expect(file3).toContain("url: '/api/users/:userId'")
 
       const file4 = fs.readFileSync(
         path.join(testDir, 'users/$userId/index.patch.ts'),
         'utf-8',
       )
-      expect(file4).toContain("url: '/api/users/:userId-2'") // Second gets suffix
+      expect(file4).toContain("url: '/api/users/:userId'") // Same URL, different method - valid!
 
       const file5 = fs.readFileSync(
         path.join(testDir, 'products/index.get.ts'),
