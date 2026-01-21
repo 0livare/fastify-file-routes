@@ -64,13 +64,9 @@ npm i -g fastify-sync
    fastify.register(autoLoad, {
      // 1. Look for routes in the `src/api` directory
      dir: path.join(import.meta.dirname, 'api'),
-     options: {
-       // 2. Prefix all routes with /api
-       prefix: '/api',
-       // 3. Do not implicitly use the directory name as part of the route prefix
-       // (Fastify Sync will explicitly set the full URL in each route file)
-       dirNameRoutePrefix: false,
-     },
+     // 2. Do not implicitly use the directory name as part of the route prefix
+     // (Fastify Sync will explicitly set the full URL in each route file)
+     dirNameRoutePrefix: false,
    })
    ```
 1. Run the `fastify-sync` command from your project root to watch your API routes:
@@ -146,11 +142,11 @@ The tool follows file-based routing conventions to automatically generate URLs f
 ```
 src/api/
 ├── users/
-│   ├── index.get.ts           → GET /api/users
+│   ├── get.ts                 → GET /api/users
 │   ├── $userId.get.ts         → GET /api/users/:userId
 │   └── $userId.patch.ts       → PATCH /api/users/:userId
 ├── products/
-│   ├── index.get.ts          → GET /api/products
+│   ├── get.ts                → GET /api/products
 │   └── $id/
 │       └── reviews.get.ts    → GET /api/products/:id/reviews
 └── _auth/
