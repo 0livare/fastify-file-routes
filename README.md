@@ -1,14 +1,8 @@
 # Fastify Sync CLI
 
-This CLI tool watches your Fastify API route files and automatically updates the `url` and `method` fields to match the file path.
+Adds file-based routing to Fastify.
 
-It provides a fully-featured file-based routing convention for Fastify:
-
-- Automatic synchronization between filenames and route URLs
-- Multiple endpoints for the same resource (e.g. `GET /users/:id` and `PATCH /users/:id`)
-- Route parameters (`src/api/users/$userId.get.ts`)
-- Index routes (`src/api/users/index.get.ts`)
-- Pathless layouts (`src/api/_group/users.post.ts`) - group routes into folders that don't appear in the URL
+This CLI tool automatically synchronizes the `url` and `method` fields in your Fastify route files with values mapped from the filename.
 
 ## Naming Convention
 
