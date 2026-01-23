@@ -35,6 +35,14 @@ export function help() {
         'Auto-generate Bruno API request files when a new Fastify route is created',
       ),
   )
+  console.info(
+    '  fastify-sync --template FILE  ' +
+      chalk.gray('Use custom template file for new routes'),
+  )
+  console.info(
+    '  fastify-sync -t FILE          ' +
+      chalk.gray('Use custom template file for new routes'),
+  )
   console.info()
   console.info(chalk.bold('How it works:'))
   gray(
@@ -42,6 +50,12 @@ export function help() {
   )
   gray('  • Automatically updates `url` and `method` to match the file path')
   gray('  • Watches for file changes and keeps URLs in sync')
+  console.info()
+  console.info(chalk.bold('Custom Templates:'))
+  gray('  • Use --template or -t to point to an existing route file')
+  gray('  • The tool copies the template and replaces method/URL values')
+  gray('  • Relative imports are automatically adjusted')
+  gray('  • Example: fastify-sync --template ./src/api/users/example.get.ts')
   console.info()
   console.info(chalk.bold('Routing conventions:'))
   gray('  • src/api/users.get.ts              → url: "/api/users" (GET)')

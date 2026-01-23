@@ -36,8 +36,11 @@ The tool establishes a naming convention similar to [Tanstack Router](https://ta
 > Prerequisite: You must have [Bun](https://bun.sh) installed globally.
 
 ```bash
-# Creates a global `fastify-sync` cli command
-npm i -g fastify-sync
+# Install fastify-autoload as a prod dependency if you haven't already
+npm i @fastify/autoload
+
+# Install fastify-sync as a dev dependency
+npm i -D fastify-sync
 ```
 
 ## Usage
@@ -93,6 +96,11 @@ On startup, **Fastify Sync** will:
 - `--version`, `-v`: Show version number
 - `--verbose`: Show detailed output during operation (by default, the CLI runs quietly)
 - `--bruno`: Auto-generate [Bruno](https://www.usebruno.com) API request files when a new Fastify route is created
+- `--template FILE`, `-t FILE`: Use an existing route file as a template for scaffolding new routes
+  - Point to any `.ts` or `.js` route file in your project
+  - The tool copies the template structure and replaces the method and URL
+  - Relative imports are automatically adjusted to the new file location
+  - Can be absolute or relative path (relative to project root)
 
 ### Bruno Integration
 
@@ -106,7 +114,19 @@ Your Bruno collection is automatically located (by looking for `bruno.json`) and
 
 [Bruno]: https://www.usebruno.com
 
-## How it works
+### Custom Templates
+
+By default, fastify-sync fills new route files with a basic Fastify template. You can provide your own template with `--template` by pointing to an existing route file in your project:
+
+```bash
+fastify-sync --template ./src/api/health.get.ts
+```
+
+All your custom logic, middleware, error handling, and business logic from the template is preserved—only the method and URL are updated.
+
+Now when you create a new route file (e.g. `src/api/orders.post.ts`), it will preserve all your custom logic, middleware, etc. from your template file, but update the method and URL to match the file name.
+
+## How Fastify Sync works
 
 The tool follows file-based routing conventions to automatically generate URLs from file paths:
 
