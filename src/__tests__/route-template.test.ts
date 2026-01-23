@@ -2,55 +2,9 @@ import {describe, it, expect} from 'vitest'
 import {generateRouteTemplate} from '../route-template'
 
 describe('generateRouteTemplate', () => {
-  describe('basic template generation with Zod', () => {
+  describe('basic template generation', () => {
     it('should generate template with GET method', () => {
-      const template = generateRouteTemplate('/api/users', 'GET', true)
-
-      expect(template).toContain("method: 'GET'")
-      expect(template).toContain("url: '/api/users'")
-      expect(template).toContain('import type { FastifyInstance }')
-      expect(template).toContain(
-        'import type { FastifyZodOpenApiTypeProvider }',
-      )
-      expect(template).toContain("import { z } from 'zod'")
-      expect(template).toContain(
-        'withTypeProvider<FastifyZodOpenApiTypeProvider>()',
-      )
-      expect(template).toContain('async handler(req, reply)')
-    })
-
-    it('should generate template with POST method', () => {
-      const template = generateRouteTemplate('/api/users', 'POST', true)
-
-      expect(template).toContain("method: 'POST'")
-      expect(template).toContain("url: '/api/users'")
-    })
-
-    it('should generate template with PUT method', () => {
-      const template = generateRouteTemplate('/api/users/:id', 'PUT', true)
-
-      expect(template).toContain("method: 'PUT'")
-      expect(template).toContain("url: '/api/users/:id'")
-    })
-
-    it('should generate template with PATCH method', () => {
-      const template = generateRouteTemplate('/api/users/:id', 'PATCH', true)
-
-      expect(template).toContain("method: 'PATCH'")
-      expect(template).toContain("url: '/api/users/:id'")
-    })
-
-    it('should generate template with DELETE method', () => {
-      const template = generateRouteTemplate('/api/users/:id', 'DELETE', true)
-
-      expect(template).toContain("method: 'DELETE'")
-      expect(template).toContain("url: '/api/users/:id'")
-    })
-  })
-
-  describe('basic template generation without Zod', () => {
-    it('should generate simple template with GET method', () => {
-      const template = generateRouteTemplate('/api/users', 'GET', false)
+      const template = generateRouteTemplate('/api/users', 'GET')
 
       expect(template).toContain("method: 'GET'")
       expect(template).toContain("url: '/api/users'")
@@ -62,32 +16,45 @@ describe('generateRouteTemplate', () => {
       expect(template).toContain('async handler(req, reply)')
     })
 
-    it('should generate simple template with POST method', () => {
-      const template = generateRouteTemplate('/api/users', 'POST', false)
+    it('should generate template with POST method', () => {
+      const template = generateRouteTemplate('/api/users', 'POST')
 
       expect(template).toContain("method: 'POST'")
       expect(template).toContain("url: '/api/users'")
       expect(template).not.toContain('schema')
     })
 
-    it('should generate simple template with DELETE method', () => {
-      const template = generateRouteTemplate('/examples/zach', 'DELETE', false)
+    it('should generate template with PUT method', () => {
+      const template = generateRouteTemplate('/api/users/:id', 'PUT')
+
+      expect(template).toContain("method: 'PUT'")
+      expect(template).toContain("url: '/api/users/:id'")
+    })
+
+    it('should generate template with PATCH method', () => {
+      const template = generateRouteTemplate('/api/users/:id', 'PATCH')
+
+      expect(template).toContain("method: 'PATCH'")
+      expect(template).toContain("url: '/api/users/:id'")
+    })
+
+    it('should generate template with DELETE method', () => {
+      const template = generateRouteTemplate('/api/users/:id', 'DELETE')
 
       expect(template).toContain("method: 'DELETE'")
-      expect(template).toContain("url: '/examples/zach'")
-      expect(template).toContain("reply.code(200).send('Hello, World!')")
+      expect(template).toContain("url: '/api/users/:id'")
     })
   })
 
   describe('URL handling', () => {
     it('should handle simple paths', () => {
-      const template = generateRouteTemplate('/api/products', 'GET', true)
+      const template = generateRouteTemplate('/api/products', 'GET')
 
       expect(template).toContain("url: '/api/products'")
     })
 
     it('should handle paths with parameters', () => {
-      const template = generateRouteTemplate('/api/users/:userId', 'GET', true)
+      const template = generateRouteTemplate('/api/users/:userId', 'GET')
 
       expect(template).toContain("url: '/api/users/:userId'")
     })
@@ -96,14 +63,13 @@ describe('generateRouteTemplate', () => {
       const template = generateRouteTemplate(
         '/api/v2/users/:id/posts/:postId',
         'GET',
-        true,
       )
 
       expect(template).toContain("url: '/api/v2/users/:id/posts/:postId'")
     })
 
     it('should handle root path', () => {
-      const template = generateRouteTemplate('/api', 'GET', true)
+      const template = generateRouteTemplate('/api', 'GET')
 
       expect(template).toContain("url: '/api'")
     })
@@ -112,59 +78,38 @@ describe('generateRouteTemplate', () => {
       const template = generateRouteTemplate(
         '/api/orgs/:orgId/projects/:projectId',
         'GET',
-        true,
       )
 
       expect(template).toContain("url: '/api/orgs/:orgId/projects/:projectId'")
     })
   })
 
-  describe('template structure with Zod', () => {
+  describe('template structure', () => {
     it('should include all necessary imports', () => {
-      const template = generateRouteTemplate('/api/test', 'GET', true)
+      const template = generateRouteTemplate('/api/test', 'GET')
 
       expect(template).toContain(
         "import type { FastifyInstance } from 'fastify'",
       )
-      expect(template).toContain(
-        "import type { FastifyZodOpenApiTypeProvider } from 'fastify-zod-openapi'",
-      )
-      expect(template).toContain("import { z } from 'zod'")
     })
 
     it('should export default async function', () => {
-      const template = generateRouteTemplate('/api/test', 'GET', true)
+      const template = generateRouteTemplate('/api/test', 'GET')
 
       expect(template).toContain(
         'export default async function (fastify: FastifyInstance)',
       )
     })
 
-    it('should include withTypeProvider', () => {
-      const template = generateRouteTemplate('/api/test', 'GET', true)
-
-      expect(template).toContain(
-        'fastify.withTypeProvider<FastifyZodOpenApiTypeProvider>().route({',
-      )
-    })
-
-    it('should include response schema', () => {
-      const template = generateRouteTemplate('/api/test', 'GET', true)
-
-      expect(template).toContain('schema: {')
-      expect(template).toContain('response: {')
-      expect(template).toContain('200: z.string(),')
-    })
-
     it('should include async handler', () => {
-      const template = generateRouteTemplate('/api/test', 'GET', true)
+      const template = generateRouteTemplate('/api/test', 'GET')
 
       expect(template).toContain('async handler(req, reply) {')
       expect(template).toContain("reply.code(200).send('Hello, World!')")
     })
 
     it('should be valid TypeScript', () => {
-      const template = generateRouteTemplate('/api/test', 'GET', true)
+      const template = generateRouteTemplate('/api/test', 'GET')
 
       // Check for balanced braces
       const openBraces = (template.match(/{/g) || []).length

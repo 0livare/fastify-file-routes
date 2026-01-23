@@ -52,13 +52,6 @@ npm i -g fastify-sync
      url: '/api/health',
    })
    ```
-   - The [zod](https://github.com/turkerdev/fastify-type-provider-zod) and [zod openapi](https://github.com/samchungy/fastify-zod-openapi) type providers are also supported:
-     ```ts
-     fastify.withTypeProvider<FastifyZodOpenApiTypeProvider>().route({
-       method: 'GET',
-       url: '/api/health',
-     })
-     ```
 1. Configure [@fastify/autoload]
    ```js
    fastify.register(autoLoad, {
