@@ -983,7 +983,7 @@ export default async function (fastify) {
         if (event.type === 'add') {
           // Extract method from filename
           const extractHttpMethod =
-            require('../method-extractor').extractHttpMethod
+            require('../filepath/method-extractor').extractHttpMethod
           const expectedMethod = extractHttpMethod(event.filePath)
           if (expectedMethod) {
             synchronizeRouteFile(event.filePath, '/test', expectedMethod)
@@ -1125,8 +1125,8 @@ export default async function (fastify: FastifyInstance) {
     // Helper function to create a watcher that scaffolds empty files
     function createScaffoldingWatcher(testDir: string) {
       const {generateRouteTemplate} = require('../route-template')
-      const {filePathToUrlPath} = require('../path-mapper')
-      const {extractHttpMethod} = require('../method-extractor')
+      const {filePathToUrlPath} = require('../filepath/path-mapper')
+      const {extractHttpMethod} = require('../filepath/method-extractor')
 
       const onEvent = vi.fn((event: WatchEvent) => {
         if (event.type === 'add') {
@@ -1319,7 +1319,7 @@ export default async function (fastify) {
       const content = fs.readFileSync(newFilePath, 'utf-8')
 
       // Verify the generated file can be parsed
-      const {parseRouteFile} = require('../ast-parser')
+      const {parseRouteFile} = require('../ast/ast-parser')
       expect(() => parseRouteFile(content)).not.toThrow()
 
       const routeConfig = parseRouteFile(content)

@@ -12,6 +12,7 @@ export function parseCliArgs() {
         verbose: {type: 'boolean'},
         root: {type: 'string', short: 'r'},
         bruno: {type: 'boolean'},
+        template: {type: 'string', short: 't'},
       },
       strict: true,
       allowPositionals: false,

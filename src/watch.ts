@@ -28,7 +28,28 @@ async function main() {
 
   const verbose = args.verbose || false
   const bruno = args.bruno || false
+  const template = args.template || null
   const apiDir = path.join(process.cwd(), 'src/api')
+
+  // Validate template if provided
+  if (template) {
+    const resolvedTemplate = path.isAbsolute(template)
+      ? template
+      : path.join(process.cwd(), template)
+
+    if (!fs.existsSync(resolvedTemplate)) {
+      console.error(chalk.red(`✗ Template file not found: ${template}`))
+      process.exit(1)
+    }
+
+    const ext = path.extname(resolvedTemplate)
+    if (ext !== '.ts' && ext !== '.js') {
+      console.error(
+        chalk.red(`✗ Template must be .ts or .js file, got: ${ext}`),
+      )
+      process.exit(1)
+    }
+  }
 
   // Find Bruno collection root if --bruno flag is enabled
   let brunoCollectionRoot: string | null = null
@@ -85,6 +106,7 @@ async function main() {
           verbose,
           true,
           brunoCollectionRoot,
+          template,
         )
         // After handling the new file, re-run full scan with conflict detection
         if (verbose)
@@ -149,6 +171,7 @@ function handleFileChange(
   verbose: boolean = false,
   isNewFile: boolean = false,
   brunoCollectionRoot: string | null = null,
+  templatePath: string | null = null,
 ): void {
   try {
     // Check if this file is in a directory with an index file
@@ -192,8 +215,12 @@ function handleFileChange(
       const fileContent = fs.readFileSync(filePath, 'utf-8').trim()
       if (fileContent === '') {
         // Scaffold the file with the template
-        const template = generateRouteTemplate(expectedUrl, expectedMethod)
-        fs.writeFileSync(filePath, template, 'utf-8')
+        const templateContent = generateRouteTemplate(expectedUrl, expectedMethod, {
+          templatePath,
+          projectRoot: process.cwd(),
+          targetFilePath: filePath,
+        })
+        fs.writeFileSync(filePath, templateContent, 'utf-8')
         if (verbose) {
           console.info(
             chalk.green(
